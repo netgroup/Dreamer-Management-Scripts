@@ -1,0 +1,49 @@
+#!/bin/bash
+############################################################
+##            		DREAMER node parameters           	  ##
+##                                                        ##
+##   Parameters to be set by the user for config process  ##
+##                                                        ##
+############################################################
+# HowTO
+#
+# PLEASE, DO NOT USE WHITE SPACES
+#
+# MGMTNET - Specify the testbed management network, without subnet mask - i.e. 10.216.0.0
+#
+######### ISTRUCTIONS (FOR ALL OTHER DREAMER NODES) #################################################################
+#
+# HOST - machine and router hostname - i.e. oshi
+#
+# SLICEVLAN - testbed slice VLAN - i.e. 200
+#
+# INTERFACES - List of physical interface to be used by the oshi node - Do not specify eth0 (the mngmt interface)
+# i.e. INTERFACES=(eth1 eth2 eth3 eth4)
+#
+# ethX - IP address and netmask to be assigned to each interface specified above into INTERFACES
+# i.e. eth1=(192.168.1.1/24)
+#
+# TAP - List of tap interfaces used to create point-to-point tunnels between end-hosts
+# i.e. TAP=(tap1)
+#
+# tapX - tap interface details. Local tap port, remote tap port, tap interface IP address,
+# name of variable indicating the ip address to reach and the interface to use (see endipX below)
+# i.e. declare -a tapX=(1191 1191 10.0.10.2/24 ENDIP1)
+#
+# STATICROUTE Overlay network address and subnet and both the overlay network default gateway and the interface card (usually tap1) to reach
+# other overlay nets - i.e. declare -a STATICROUTE=(10.0.0.0 255.0.0.0 10.0.10.1 tap1)
+#
+# endipX - express the ip address to connect to with a specific tap interface and the local ethernet interface to use to make the connection
+# i.e. endipX=(192.168.0.1 eth1)
+#
+######### ISTRUCTIONS END ###########################################################################################
+#
+# END-USER-NODE EXAMPLE
+#HOST=endusernode
+#SLICEVLAN=100
+#declare -a INTERFACES=(eth1)
+#declare -a eth1=(192.168.2.21 255.255.0.0)
+#declare -a TAP=(tap1)
+#declare -a tap1=(1191 1193 10.0.20.2/24 ENDIP1)
+#declare -a STATICROUTE=(10.0.0.0 255.0.0.0 10.0.20.1 tap1)
+#declare -a ENDIP1=(192.168.1.21 eth1)

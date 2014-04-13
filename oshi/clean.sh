@@ -152,7 +152,6 @@ sed -i -e '/^$/d' /etc/network/interfaces &&
 
 echo -e "\n-Restarting network services"
 /etc/init.d/networking restart &&
-/etc/init.d/avahi-daemon start &&
 
 echo -e "\n\nDREAMER IP/SDN hybrid node configuration cleaning ended succesfully. Enjoy!\n"
 

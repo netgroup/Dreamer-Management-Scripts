@@ -32,7 +32,7 @@ if [ -f testbed.sh ];
 					then
 						echo -e "\n---> remote.cfg file found in /etc/dreamer. Trying to read the file... "
 						source /etc/dreamer/remote.cfg
-						if [ $DREAMERCONFIGSERVER != "" ];
+						if [ -n $DREAMERCONFIGSERVER ];
 							then
 								echo -e "---> DREAMERCONFIGSERVER variable found in remote.cfg. Trying to download the configuration file from $DREAMERCONFIGSERVER"
 								wget $DREAMERCONFIGSERVER 2> /dev/null
@@ -45,17 +45,49 @@ if [ -f testbed.sh ];
 										echo "---> Configuration file downloaded in /etc/dreamer."
 									else
 										echo "---> ERROR: No configuration files found at $DREAMERCONFIGSERVER. Try to upload the file again and make sure that the path is still available."
+										EXIT_ERROR=-1
+										exit $EXIT_ERROR
 								fi
 							else
 								echo -e "---> ERROR: DREAMERCONFIGSERVER variable not found in remote.cfg file or value not correct. Please, try to correct the value."
+								EXIT_ERROR=-1
+								exit $EXIT_ERROR
 						fi
 					else
 						echo -e "\n---> ERROR: remote.cfg file not found in /etc/draemer."
 						echo -e "\n\n---> ERROR: no configuration files found. Please set either a local or a remote configuration file before starting."
-						exit
+						EXIT_ERROR=-1
+                        exit $EXIT_ERROR
 				fi
 		fi
 fi
+
+# Check addresses
+echo -e "\n-Checking addresses compatibilities between testbed mgmt network and chosen addresses"
+MGMTADDR=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}')
+MGMTMASK=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}')
+MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK | grep Network | awk '{split($0,a," "); print a[2]}')
+for (( i=0; i<${#INTERFACES[@]}; i++ )); do
+        eval addr=\${${INTERFACES[$i]}[0]}
+        eval netmask=\${${INTERFACES[$i]}[1]}
+        CURRENTNET=$(ipcalc $addr $netmask | grep Network | awk '{split($0,a," "); print a[2]}')
+        if [ $CURRENTNET == $MGMTNETWORK ]
+                then
+                        echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
+                        EXIT_ERROR=-1
+                        exit $EXIT_ERROR
+        fi
+done
+for i in ${TAP[@]}; do
+        eval LOCALIP=\${${i}[2]}
+        CURRENTNET=$(ipcalc $LOCALIP | grep Network | awk '{split($0,a," "); print a[2]}')
+        if [ $CURRENTNET == $MGMTNETWORK ]
+                then
+                        echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
+                        EXIT_ERROR=-1
+                        exit $EXIT_ERROR
+        fi
+done
 
 echo -e "\n-Setting up physical interfaces"
 # deleting white spaces in /etc/network/interfaces
@@ -100,7 +132,7 @@ up route add -host $remoteaddr dev $interface.$SLICEVLAN
 done
 
 echo -e "\n-Restarting network services"
-service networking restart &&
+/etc/init.d/networking restart &&
 service avahi-daemon stop &&
 
 echo -e "\n-Setting hostname"
@@ -136,7 +168,9 @@ echo -e "\n-Starting OpenVPN service"
 /etc/init.d/openvpn start &&
 
 echo -e "\n-Adding static routes for ${STATICROUTE[3]} device"
-route add -net 10.216.0.0 netmask 255.255.0.0 gw 10.216.32.1 dev eth0 &&
+MGMTGW=$(route -n | grep UG | awk -F' ' '{print $2}')
+MGMTETH=$(route -n | grep UG | awk -F' ' '{print $8}')
+route add -net $MGMTNETWORK netmask $MGMTMASK gw $MGMTGW dev $MGMTETH &&
 route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev ${STATICROUTE[3]} &&
 
 echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"

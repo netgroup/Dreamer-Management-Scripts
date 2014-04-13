@@ -1,5 +1,5 @@
 #!/bin/bash
-# The script installs OSHI packages on Ofelia Linux Debian 6
+# The script installs OSHI packages on Linux Debian
 
 echo -e "\n"
 echo "############################################################"
@@ -9,11 +9,34 @@ echo "## The installation process can last many minutes.        ##"
 echo "## Plase wait and do not interrupt the setup process.     ##"
 echo "############################################################"
 
-echo -e "\n\n"
-echo "Executing apt-get update"
+if [ $(uname -r) == "3.2.0-4-amd64" ]
+	then
+echo -e "\n-Changing /etc/apt/source.list to Debian wheezy, kernel 3.2.0"
+echo "#
+#  /etc/apt/sources.list
+#
+
+
+#
+# squeeze
+#
+deb 	http://ftp.uk.debian.org/debian stable main contrib non-free
+deb-src http://ftp.uk.debian.org/debian stable main contrib non-free
+
+#
+#  Security updates
+#
+deb http://security.debian.org/ wheezy/updates main contrib non-free
+deb-src http://security.debian.org/ wheezy/updates main contrib non-free" > /etc/apt/sources.list
+fi
+
+echo -e "\n-Executing apt-get update"
 apt-get update &&
 
 echo -e "\n\nDOWNLOADING PREREQUISITES"
+
+echo -e "\n-Installing VIM"
+apt-get install -y vim &&
 
 echo -e "\n-Installing python-simplejson"
 apt-get install -y python-simplejson &&
@@ -27,8 +50,17 @@ apt-get install -y python-zopeinterface &&
 echo -e "\n-Installing Python-Twisted-Conch"
 apt-get install -y python-twisted-conch &&
 
-echo -e "\n-Installing Linux Headers 2.6.32-5-xen-amd64"
-apt-get install -y linux-headers-2.6.32-5-xen-amd64 &&
+echo -e "\n-Installing pkg-config"
+apt-get install -y pkg-config &&
+
+echo -e "\n-Installing dh-autoreconf"
+apt-get install -y dh-autoreconf &&
+
+echo -e "\n-Installing ipcalc"
+apt-get install -y ipcalc &&
+
+echo -e "\n-Installing Linux Headers for Linux kernel `uname -r`"
+apt-get install -y linux-headers-`uname -r` &&
 
 echo -e "\n-Installing OpenVPN"
 apt-get install -y openvpn &&
@@ -51,10 +83,10 @@ echo -e "\n-Installing OpenVSwitch"
 # Creating folder for OVS under /opt/ovs
 mkdir -p /opt/ovs &&
 # Downloading
-wget -P/opt/ovs http://openvswitch.org/releases/openvswitch-1.9.0.tar.gz &&
+wget -P/opt/ovs http://openvswitch.org/releases/openvswitch-1.10.0.tar.gz &&
 # Extracting
-tar -xvzf /opt/ovs/openvswitch-1.9.0.tar.gz -C /opt/ovs &&
-cd  /opt/ovs/openvswitch-1.9.0/ &&
+tar -xvzf /opt/ovs/openvswitch-1.10.0.tar.gz -C /opt/ovs &&
+cd  /opt/ovs/openvswitch-1.10.0/ &&
 # Boot up and configuring sources
 ./boot.sh &&
 ./configure --with-linux=/lib/modules/`uname -r`/build &&
@@ -64,7 +96,7 @@ make install &&
 # OVS module installation
 make modules_install &&
 mkdir -p /lib/modules/`uname -r`/kernel/openvswitch
-cp /opt/ovs/openvswitch-1.9.0/datapath/linux/openvswitch.ko /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko
+cp /opt/ovs/openvswitch-1.10.0/datapath/linux/openvswitch.ko /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko
 depmod -a &&
 # Making module loading permanent
 modprobe openvswitch &&
@@ -74,7 +106,7 @@ if [ $(cat /etc/modules | grep openvswitch | wc -l) -eq 0 ]
 fi
 # Create and initialize the database
 mkdir -p /usr/local/etc/openvswitch &&
-ovsdb-tool create /usr/local/etc/openvswitch/conf.db /opt/ovs/openvswitch-1.9.0/vswitchd/vswitch.ovsschema &&
+ovsdb-tool create /usr/local/etc/openvswitch/conf.db /opt/ovs/openvswitch-1.10.0/vswitchd/vswitch.ovsschema &&
 ovsdb-server --remote=punix:/usr/local/var/run/openvswitch/db.sock \
                      --remote=db:Open_vSwitch,manager_options \
                      --private-key=db:SSL,private_key \

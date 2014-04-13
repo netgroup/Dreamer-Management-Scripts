@@ -32,11 +32,11 @@ while [ $counter -lt $endofcounter ]; do
 done
 
 for (( i=0; i<${#HOSTS[@]}; i++ )); do
-        scp dreamernodes.tar.gz ${USERS[$i]}@${HOSTS[$i]}:/ofelia/users/${USERS[$i]}/
+        scp dreamernodes.tar.gz ${USERS[$i]}@${HOSTS[$i]}:/${USERS[$i]}/
 done
 
-dsh -M -g $1 -c "sudo tar -xvzf /ofelia/users/${USERS[0]}/dreamernodes.tar.gz && sudo bash /ofelia/users/${USERS[0]}/dreamernodes/setup.sh"
-dsh -M -g $1 -c "sudo bash /etc/dreamer/config.sh"
+dsh -M -g $1 -c "tar -xvzf /ofelia/users/${USERS[0]}/dreamernodes.tar.gz && bash /ofelia/users/${USERS[0]}/dreamernodes/setup.sh"
+dsh -M -g $1 -c "bash /etc/dreamer/config.sh"
 
 echo -e "\nDREAMER nodes installed successfully.\n"
 

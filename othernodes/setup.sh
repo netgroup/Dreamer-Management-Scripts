@@ -1,5 +1,5 @@
 #!/bin/bash
-# The script installs DREAMER node packages on Ofelia Linux Debian 6
+# The script installs DREAMER node packages on Linux Debian
 
 echo -e "\n"
 echo "############################################################"
@@ -9,11 +9,38 @@ echo "## The installation process can last many minutes.        ##"
 echo "## Plase wait and do not interrupt the setup process.     ##"
 echo "############################################################"
 
-echo -e "\n\n"
-echo "Executing apt-get update"
+echo -e "\n"
+if [ $(uname -r) == "3.2.0-4-amd64" ]
+	then
+echo -e "\n-Changing /etc/apt/source.list to Debian wheezy, kernel 3.2.0"
+echo "#
+#  /etc/apt/sources.list
+#
+
+
+#
+# squeeze
+#
+deb 	http://ftp.uk.debian.org/debian stable main contrib non-free
+deb-src http://ftp.uk.debian.org/debian stable main contrib non-free
+
+#
+#  Security updates
+#
+deb http://security.debian.org/ wheezy/updates main contrib non-free
+deb-src http://security.debian.org/ wheezy/updates main contrib non-free" > /etc/apt/sources.list
+fi
+
+echo -e "\n-Executing apt-get update"
 apt-get update &&
 
 echo -e "\n\nDOWNLOADING PREREQUISITES"
+
+echo -e "\n-Installing ipcalc"
+apt-get install -y ipcalc &&
+
+echo -e "\n-Installing VIM"
+apt-get install -y vim &&
 
 echo -e "\n-Installing OpenVPN"
 apt-get install -y openvpn &&

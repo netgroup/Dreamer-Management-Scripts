@@ -19,9 +19,9 @@ if [[ -z "$1" ]];
 	then
         echo -e "\nWARNING: Without specifying as first parameter a DSH group the change will be applied to all host. Are you sure you want to continue? If you want to exit now, please press CTRL + C. Otherwise, if you are ready, press ENTER to continue."
         read
-		dsh -M -a -c "sudo bash /etc/dreamer/clean.sh"
+		dsh -M -a -c "bash /etc/dreamer/clean.sh"
 	else
-		dsh -M -g $1 -c "sudo bash /etc/dreamer/clean.sh"
+		dsh -M -g $1 -c "bash /etc/dreamer/clean.sh"
 fi
 
 echo -e "\nDREAMER nodes cleaned successfully.\n"

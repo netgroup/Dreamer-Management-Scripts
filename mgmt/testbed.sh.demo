@@ -13,8 +13,6 @@
 #
 # PLEASE, DO NOT USE WHITE SPACES
 #
-# MGMTNET - Specify the testbed management network, without subnet mask - i.e. 10.216.0.0
-#
 ######### ISTRUCTIONS (ONLY FOR OSHI NODES) #################################################################
 #
 # HOST - machine and router hostname - i.e. oshi
@@ -88,9 +86,7 @@
 # i.e. endipX=(192.168.0.1 eth1)
 #
 ######### ISTRUCTIONS END ###########################################################################################
-# general configuration - start
-MGMTNET=10.216.0.0
-# general configuration - end
+#
 # 10.216.33.133 - start
 HOST=OSHI01
 ROUTERPWD=dreamer

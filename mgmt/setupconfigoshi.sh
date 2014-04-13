@@ -35,8 +35,8 @@ for (( i=0; i<${#HOSTS[@]}; i++ )); do
         scp dreameroshi.tar.gz ${USERS[$i]}@${HOSTS[$i]}:/ofelia/users/${USERS[$i]}/
 done
 
-dsh -M -g $1 -c "sudo tar -xvzf /ofelia/users/${USERS[0]}/dreameroshi.tar.gz && sudo bash /ofelia/users/${USERS[0]}/dreameroshi/setup.sh"
-dsh -M -g $1 -c "sudo bash /etc/dreamer/config.sh"
+dsh -M -g $1 -c "tar -xvzf /ofelia/users/${USERS[0]}/dreameroshi.tar.gz && bash /ofelia/users/${USERS[0]}/dreameroshi/setup.sh"
+dsh -M -g $1 -c "bash /etc/dreamer/config.sh"
 
 echo -e "\nDREAMER OSHI nodes installed successfully.\n"
 

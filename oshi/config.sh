@@ -32,7 +32,7 @@ if [ -f testbed.sh ];
 					then
 						echo -e "\n---> remote.cfg file found in /etc/dreamer. Trying to read the file... "
 						source /etc/dreamer/remote.cfg
-						if [ $DREAMERCONFIGSERVER != "" ];
+						if [ -n "$DREAMERCONFIGSERVER" ];
 							then
 								echo -e "---> DREAMERCONFIGSERVER variable found in remote.cfg. Trying to download the configuration file from $DREAMERCONFIGSERVER"
 								wget $DREAMERCONFIGSERVER 2> /dev/null
@@ -45,17 +45,49 @@ if [ -f testbed.sh ];
 										echo "---> Configuration file downloaded in /etc/dreamer."
 									else
 										echo "---> ERROR: No configuration files found at $DREAMERCONFIGSERVER. Try to upload the file again and make sure that the path is still available."
+										EXIT_ERROR=-1
+										exit $EXIT_ERROR
 								fi
 							else
 								echo -e "---> ERROR: DREAMERCONFIGSERVER variable not found in remote.cfg file or value not correct. Please, try to correct the value."
+								EXIT_ERROR=-1
+								exit $EXIT_ERROR
 						fi
 					else
 						echo -e "\n---> ERROR: remote.cfg file not found in /etc/draemer."
 						echo -e "\n\n---> ERROR: no configuration files found. Please set either a local or a remote configuration file before starting."
-						exit
+						EXIT_ERROR=-1
+                        exit $EXIT_ERROR
 				fi
 		fi
 fi
+
+# Check addresses
+echo -e "\n-Checking addresses compatibilities between testbed mgmt network and chosen addresses"
+MGMTADDR=ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}'
+MGMTMASK=ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}'
+MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK | grep Network | awk '{split($0,a," "); print a[2]}')
+for (( i=0; i<${#INTERFACES[@]}; i++ )); do
+        eval addr=\${${INTERFACES[$i]}[0]}
+        eval netmask=\${${INTERFACES[$i]}[1]}
+        CURRENTNET=$(ipcalc $addr $netmask | grep Network | awk '{split($0,a," "); print a[2]}')
+        if [ $CURRENTNET == $MGMTNETWORK ]
+                then
+                        echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
+                        EXIT_ERROR=-1
+                        exit $EXIT_ERROR
+        fi
+done
+for i in ${QUAGGAINT[@]}; do
+        eval QUAGGAIP=\${${i}[0]}
+        CURRENTNET=$(ipcalc $QUAGGAIP | grep Network | awk '{split($0,a," "); print a[2]}')
+        if [ $CURRENTNET == $MGMTNETWORK ]
+                then
+                        echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
+                        EXIT_ERROR=-1
+                        exit $EXIT_ERROR
+        fi
+done
 
 echo -e "\n-Setting up physical interfaces"
 # deleting white spaces in /etc/network/interfaces
@@ -102,8 +134,11 @@ up route add -host $remoteaddr dev $interface.$SLICEVLAN
 done
 
 echo -e "\n-Restarting network services"
-service networking restart &&
-service avahi-daemon stop &&
+/etc/init.d/networking restart &&
+
+if [ $(ps aux | grep avahi-daemon | wc -l) -gt 1 ]; then
+	/etc/init.d/avahi-daemon stop
+fi
 
 echo -e "\n-Setting hostname"
 # setting hostname in /etc/hostname
@@ -244,11 +279,11 @@ declare -a ofporttap &&
 declare -a ofportquaggaint &&
 
 for i in ${TAP[@]}; do
-    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep ofport | sed -n "1 p" | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
 done
 
 for i in ${QUAGGAINT[@]}; do
-	OFPORTSQUAGGAINT[${#OFPORTSQUAGGAINT[@]}]=$(ovs-vsctl find Interface name=$i | grep ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+	OFPORTSQUAGGAINT[${#OFPORTSQUAGGAINT[@]}]=$(ovs-vsctl find Interface name=$i | grep ofport | sed -n "1 p" | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
 done
 for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
         ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSQUAGGAINT[$i]}

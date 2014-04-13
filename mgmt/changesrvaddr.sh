@@ -25,13 +25,13 @@ if [[ -z "$2" ]];
 	then
         echo -e "\nWARNING: Without specifying as first parameter a DSH group the change will be applied to all host. Are you sure you want to continue? If you want to exit now, please press CTRL + C. Otherwise, if you are ready, press ENTER to continue."
         read
-		dsh -M -a -c "sudo bash -c \"echo \# DREAMERCONFIGSERVER parameter is used to fetch the dreamer update server. Put your testbed.sh file there, delete local configuration files, run clean and config utils\
+		dsh -M -a -c "bash -c \"echo \# DREAMERCONFIGSERVER parameter is used to fetch the dreamer update server. Put your testbed.sh file there, delete local configuration files, run clean and config utils\
 \# i.e. DREAMERCONFIGSERVER\=http\:\/\/www\.yourserver\.com\/testbed\.sh > /etc/dreamer/remote.cfg\""
-		dsh -M -a -c "sudo bash -c \"echo DREAMERCONFIGSERVER=$1 >> /etc/dreamer/remote.cfg\""
+		dsh -M -a -c "bash -c \"echo DREAMERCONFIGSERVER=$1 >> /etc/dreamer/remote.cfg\""
 	else
-		dsh -M -g $2 -c "sudo bash -c \"echo \# DREAMERCONFIGSERVER parameter is used to fetch the dreamer update server. Put your testbed.sh file there, delete local configuration files, run clean and config utils\
+		dsh -M -g $2 -c "bash -c \"echo \# DREAMERCONFIGSERVER parameter is used to fetch the dreamer update server. Put your testbed.sh file there, delete local configuration files, run clean and config utils\
 \# i.e. DREAMERCONFIGSERVER\=http\:\/\/www\.yourserver\.com\/testbed\.sh > /etc/dreamer/remote.cfg\""
-		dsh -M -g $2 -c "sudo bash -c \"echo DREAMERCONFIGSERVER=$1 >> /etc/dreamer/remote.cfg\""
+		dsh -M -g $2 -c "bash -c \"echo DREAMERCONFIGSERVER=$1 >> /etc/dreamer/remote.cfg\""
 fi
 
 echo -e "\nDREAMER nodes update server address changed successfully in remote.cfg files.\n"

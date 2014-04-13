@@ -9,7 +9,6 @@
 #
 # PLEASE, DO NOT USE WHITE SPACES
 #
-# MGMTNET - Specify the testbed management network, without subnet mask - i.e. 10.216.0.0
 #
 ######### ISTRUCTIONS (FOR ALL OTHER DREAMER NODES) #################################################################
 #
@@ -39,6 +38,7 @@
 ######### ISTRUCTIONS END ###########################################################################################
 #
 # END-USER-NODE EXAMPLE
+#
 #HOST=endusernode
 #SLICEVLAN=100
 #declare -a INTERFACES=(eth1)

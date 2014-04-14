@@ -261,7 +261,7 @@ for (( i=0; i<${#CTRL[@]}; i++ )); do
 done
 ovs-vsctl set-controller $BRIDGENAME $CONTROLLERS &&
 ovs-vsctl set-fail-mode $BRIDGENAME secure &&
-ovs-vsctl set controller $BRIDGENAME connection-mode=in-band &&
+ovs-vsctl set controller $BRIDGENAME connection-mode=out-of-band &&
 ovs-vsctl set bridge $BRIDGENAME other-config:datapath-id=$DPID
 
 echo -e "\n-Adding interfaces to OpenVSwitch"

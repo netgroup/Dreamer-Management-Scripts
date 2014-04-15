@@ -26,11 +26,9 @@ plain_node_vxlan () {
                         eval remoteaddr=\${!$i[3]}
                         ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr # questo deventa solo internal
                         ovs-vsctl add-port $TUNL_BRIDGE-$j vi-$i -- set Interface vi-$i type=internal
-                        echo "tap " 
-                        eval ppp=\${${TAP[$y]}[2]}
-                        echo $ppp
-                        ip a a 10.0.16.2/24  dev vi-$i
-                        ip r a 10.0.16.0/24 dev vi-$i
+                        eval ip=\${${TAP[$y]}[2]}
+                        echo $ip
+                        ip a a $ip  dev vi-$i
                         y=$((y+1))
                 done
                 declare -a port_tap &&
@@ -252,11 +250,16 @@ echo -e "\n-Starting OpenVPN service"
 
 fi
 
+plain_node_vxlan
+
+
 echo -e "\n-Adding static routes for ${STATICROUTE[3]} device"
 MGMTGW=$(route -n | grep UG | awk -F' ' '{print $2}')
 MGMTETH=$(route -n | grep UG | awk -F' ' '{print $8}')
-route add -net $MGMTNETWORK netmask $MGMTMASK gw $MGMTGW dev $MGMTETH &&
-route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev ${STATICROUTE[3]} &&
+echo $MGMTGW
+echo $MGMTETH
+#route add -net $MGMTNETWORK netmask $MGMTMASK gw $MGMTGW dev $MGMTETH 
+route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev vi-${STATICROUTE[3]}
 
 echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
 echo -e "cd /etc/dreamer" >> /root/.bashrc

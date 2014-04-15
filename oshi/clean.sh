@@ -21,6 +21,13 @@ for i in $(ovs-vsctl list-br); do
 	ovs-vsctl del-br $i
 done
 
+# ugly fix to remove ovs-system bridge
+rmmod openvswitch
+/etc/init.d/openvswitch stop
+insmod /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko
+/etc/init.d/openvswitch start
+#
+
 # OpenVPN
 if [ $(ip link show | grep tap | wc -l) -gt 0 ]; then
 	echo -e "\n-Turning off tap interfaces"

@@ -257,8 +257,8 @@ fi
 
 # Check addresses
 echo -e "\n-Checking addresses compatibilities between testbed mgmt network and chosen addresses"
-MGMTADDR=ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}'
-MGMTMASK=ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}'
+MGMTADDR=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}')
+MGMTMASK=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}')
 MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK | grep Network | awk '{split($0,a," "); print a[2]}')
 for (( i=0; i<${#INTERFACES[@]}; i++ )); do
         eval addr=\${${INTERFACES[$i]}[0]}
@@ -448,7 +448,7 @@ echo -e "\n-Starting Quagga daemon"
 
 echo -e "\n-Configuring OpenVSwitch"
 
-if [ $VXLAN && $PLAIN_IP_ROUTER];then
+if [ $VXLAN && $PLAIN_IP_ROUTER ]; then
 #if plain_ip_router
 	plain_ip_router_vxlan
 else 

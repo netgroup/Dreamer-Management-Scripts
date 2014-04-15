@@ -21,12 +21,9 @@ for i in $(ovs-vsctl list-br); do
 	ovs-vsctl del-br $i
 done
 
-# ugly fix to remove ovs-system bridge
-/etc/init.d/openvswitchd stop
-rmmod openvswitch
-insmod /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko
-/etc/init.d/openvswitchd start
-#
+#remove ovs-system bridge
+#TODO add if vxlan
+ovs-dpctl del-dp ovs-system
 
 # OpenVPN
 if [ $(ip link show | grep tap | wc -l) -gt 0 ]; then

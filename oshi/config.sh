@@ -9,6 +9,9 @@ echo "## The configuration process can last many minutes. Please ##"
 echo "## and do not interrupt the process.                       ##"
 echo "#############################################################"
 
+#temporaneamente...
+TUNL_BRIDGE=br-tun
+VXLAN=yes
 
 oshi () {
 

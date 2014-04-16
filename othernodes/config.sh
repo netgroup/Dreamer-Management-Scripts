@@ -259,7 +259,7 @@ MGMTETH=$(route -n | grep UG | awk -F' ' '{print $8}')
 echo $MGMTGW
 echo $MGMTETH
 #route add -net $MGMTNETWORK netmask $MGMTMASK gw $MGMTGW dev $MGMTETH 
-route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev vi-${STATICROUTE[3]}
+#route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev vi-${STATICROUTE[3]}
 
 echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
 echo -e "cd /etc/dreamer" >> /root/.bashrc

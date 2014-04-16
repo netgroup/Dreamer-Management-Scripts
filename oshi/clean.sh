@@ -22,10 +22,10 @@ for i in $(ovs-vsctl list-br); do
 done
 
 # ugly fix to remove ovs-system bridge
-#rmmod openvswitch
-#/etc/init.d/openvswitch stop
-#insmod /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko
-#/etc/init.d/openvswitch start
+/etc/init.d/openvswitchd stop
+rmmod openvswitch
+insmod /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko
+/etc/init.d/openvswitchd start
 #
 
 # OpenVPN

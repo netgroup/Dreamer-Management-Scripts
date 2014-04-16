@@ -26,8 +26,9 @@ plain_node_vxlan () {
 
                 y=0
                 for i in ${TAP[@]}; do
+                        eval remoteport=\${${i}[1]}
                         eval remoteaddr=\${!$i[3]}
-                        ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr # questo deventa solo internal
+                        ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
                         ovs-vsctl add-port $TUNL_BRIDGE-$j vi-$i -- set Interface vi-$i type=internal
                         eval ip=\${${TAP[$y]}[2]}
                         echo $ip

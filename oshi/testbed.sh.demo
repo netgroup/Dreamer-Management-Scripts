@@ -12,6 +12,9 @@
 #
 ######### ISTRUCTIONS (ONLY FOR OSHI NODES) #################################################################
 #
+# MGMTNET - mgmt testbed network, netmask, gateway, management interface
+# OFELIA default: 10.216.0.0 255.255.0.0 10.216.32.1 eth0
+#
 # HOST - machine and router hostname - i.e. oshi
 #
 # ROUTERPWD - Machine password and quagga router password - i.e. dreamer
@@ -63,6 +66,7 @@
 #DPID=0000000000000001
 #SLICEVLAN=100
 #BRIDGENAME=br-dreamer
+#declare -a MGMTNET=(10.216.0.0 255.255.0.0 10.216.32.1 eth0)
 #declare -a CTRL=(CTRL1)
 #declare -a CTRL1=(10.0.10.2 6633)
 #declare -a LOOPBACK=(10.0.100.1/32 1 1)

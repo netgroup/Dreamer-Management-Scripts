@@ -66,11 +66,11 @@ fi
 echo -e "\n-Checking addresses compatibilities between testbed mgmt network and chosen addresses"
 MGMTADDR=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}')
 MGMTMASK=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}')
-MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK | grep Network | awk '{split($0,a," "); print a[2]}')
+MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
 for (( i=0; i<${#INTERFACES[@]}; i++ )); do
         eval addr=\${${INTERFACES[$i]}[0]}
         eval netmask=\${${INTERFACES[$i]}[1]}
-        CURRENTNET=$(ipcalc $addr $netmask | grep Network | awk '{split($0,a," "); print a[2]}')
+        CURRENTNET=$(ipcalc $addr $netmask 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
         if [ $CURRENTNET == $MGMTNETWORK ]
                 then
                         echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
@@ -80,7 +80,7 @@ for (( i=0; i<${#INTERFACES[@]}; i++ )); do
 done
 for i in ${TAP[@]}; do
         eval LOCALIP=\${${i}[2]}
-        CURRENTNET=$(ipcalc $LOCALIP | grep Network | awk '{split($0,a," "); print a[2]}')
+        CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
         if [ $CURRENTNET == $MGMTNETWORK ]
                 then
                         echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
@@ -168,9 +168,7 @@ echo -e "\n-Starting OpenVPN service"
 /etc/init.d/openvpn start &&
 
 echo -e "\n-Adding static routes for ${STATICROUTE[3]} device"
-MGMTGW=$(route -n | grep UG | awk -F' ' '{print $2}')
-MGMTETH=$(route -n | grep UG | awk -F' ' '{print $8}')
-route add -net $MGMTNETWORK netmask $MGMTMASK gw $MGMTGW dev $MGMTETH &&
+route add -net ${MGMTNET[0]} netmask ${MGMTNET[1]} gw ${MGMTNET[2]} dev ${MGMTNET[3]} &&
 route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev ${STATICROUTE[3]} &&
 
 echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"

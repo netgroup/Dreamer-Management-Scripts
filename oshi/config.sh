@@ -397,12 +397,15 @@ echo -e "! -*- ospf -*-
 !
 hostname $HOST
 password $ROUTERPWD
-log file /var/log/quagga/ospfd.log\n" > /etc/quagga/ospfd.conf &&
+log file /var/log/quagga/ospfd.log\n
+interface lo
+ospf cost ${LOOPBACK[1]}
+ospf hello-interval ${LOOPBACK[2]}\n" > /etc/quagga/ospfd.conf &&
 for i in ${QUAGGAINT[@]}; do
 eval quaggaospfcost=\${${i}[1]}
 eval quaggahellointerval=\${${i}[2]}
 echo -e "interface $i
-!ospf cost $quaggaospfcost
+ospf cost $quaggaospfcost
 ospf hello-interval $quaggahellointerval\n" >> /etc/quagga/ospfd.conf
 done
 echo -e "router ospf\n" >> /etc/quagga/ospfd.conf
@@ -448,7 +451,8 @@ echo -e "\n-Starting Quagga daemon"
 
 echo -e "\n-Configuring OpenVSwitch"
 
-if [ $VXLAN && $PLAIN_IP_ROUTER ]; then
+if [ $VXLAN ] && [ $PLAIN_IP_ROUTER ];
+then
 #if plain_ip_router
 	plain_ip_router_vxlan
 else 

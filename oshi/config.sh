@@ -13,6 +13,9 @@ echo "#############################################################"
 TUNL_BRIDGE=br-tun
 VXLAN=yes
 
+TYPE_OF_TUNNEL="vxlan"
+TYPE_OF_TUNNEL="vxlan"
+
 oshi () {
 
 	echo -e "\n-Configuring OpenVSwitch fo OSHI"
@@ -43,8 +46,9 @@ oshi () {
 		
 		echo -e "\n-Adding interfaces to bridge $BRIDGENAME"
 		for i in ${TAP[@]}; do
+    		eval remoteport=\${${i}[1]}
 			eval remoteaddr=\${!$i[2]}
-			ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr
+			ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=flow options:dst_port=$remoteport
 		done
 	else
 		echo -e "\n-Adding interfaces to bridge $BRIDGENAME"
@@ -87,47 +91,6 @@ oshi () {
 
 }
 
-dremer_node_vxlan () {
-	
-	ii=0
-	for j in ${INTERFACES[@]}; do
-		
-		create_vxlan_bridge
-
-		echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE-$j"
-		
-		#TODO: solo le tap che stanno su quella eth 
-
-		for i in ${TAP[@]}; do
-			eval remoteaddr=\${!$i[2]}
-			ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr # questo deventa solo internal 
-		done
-
-
-		echo -e "\n-Adding internal virtual interfaces to bridge $TUNL_BRIDGE-$j"
-		for i in ${QUAGGAINT[@]}; do
-			ovs-vsctl add-port $TUNL_BRIDGE-$j $i -- set Interface $i type=internal
-		done
-		declare -a ofporttap &&
-		declare -a ofportquaggaint &&
-
-		for i in ${TAP[@]}; do
-		    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-		done
-
-		for i in ${QUAGGAINT[@]}; do
-			OFPORTSQUAGGAINT[${#OFPORTSQUAGGAINT[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-		done
-		for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
-		        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSQUAGGAINT[$i]}
-		        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${OFPORTSQUAGGAINT[$i]},action=output:${OFPORTSTAP[$i]}
-		done
-
-		ii=$((ii+1))
-	done
-}
-
-
 plain_ip_router_vxlan () {
 	
 	ii=0
@@ -140,8 +103,9 @@ plain_ip_router_vxlan () {
 		#TODO: solo le tap che stanno su quella eth 
 
 		for i in ${TAP[@]}; do
+    		eval remoteport=\${${i}[1]}
 			eval remoteaddr=\${!$i[2]}
-			ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr # questo deventa solo internal
+			ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
 		done
 
 

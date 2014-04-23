@@ -91,8 +91,6 @@ create_vxlan_interfaces () {
 
 	ii=0
 	for j in ${INTERFACES[@]}; do
-		echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE-$j"
-
 		eval interface_ip=\${${j}[0]}
 		eval interface_netmask=\${${j}[1]}
 		ip link set ${INTERFACES[$ii]} up

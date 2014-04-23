@@ -18,7 +18,7 @@ TYPE_OF_TUNNEL="vxlan"
 plain_ip_router_vxlan_2 () {
 	
 	create_vxlan_interfaces
-
+	ovs-vsctl add-br $TUNL_BRIDGE
 	echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE"
 	
 	for i in ${TAP[@]}; do
@@ -94,14 +94,12 @@ create_vxlan_interfaces () {
 
 	ii=0
 	for j in ${INTERFACES[@]}; do
-		echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE-$j"
-
 		eval interface_ip=\${${j}[0]}
 		eval interface_netmask=\${${j}[1]}
 		ip link set ${INTERFACES[$ii]} up
 		vconfig add ${INTERFACES[$ii]} $SLICEVLAN
 		ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
-		ifconfig $j $interface_ip.$SLICEVLAN netmask $interface_netmask
+		ifconfig $j.$SLICEVLAN $interface_ip netmask $interface_netmask
 		ip r d 192.168.0.0/16 dev $j.$SLICEVLAN 
 		ii=$((ii+1))
 	done
@@ -439,7 +437,6 @@ echo -e "\n-Starting Quagga daemon"
 
 if [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
 	echo -e "\n-Configuring OpenVSwitch"
-	plain_ip_router_vxlan
 
 	# Appending rules to reconfig OVS port associations when the service start, to the service file /etc/init.d/openvswitchd
 	echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"

@@ -13,87 +13,48 @@ echo "#############################################################"
 TUNL_BRIDGE=br-tun
 TYPE_OF_TUNNEL="vxlan"
 #TYPE_OF_TUNNEL="openvpn"
-OSHI_VXLAN_TYPE="one_bridge"
-#OSHI_VXLAN_TYPE="two_bridge"
 
-oshi () {
-
-	echo -e "\n-Configuring OpenVSwitch fo OSHI"
-	echo -e "\n-Creating OpenVSwitch bridge $BRIDGENAME"
+plain_ip_router_vxlan () {
 	
-	ovs-vsctl add-br $BRIDGENAME &&
-	echo -e "\n-Setting OpenFlow controller for bridge ${BRIDGENAME}"
-	let CONTROLLERS
-	for (( i=0; i<${#CTRL[@]}; i++ )); do
-		eval CONTROLLER=\${${CTRL[$i]}[0]}
-		eval CONTROLLERPORT=\${${CTRL[$i]}[1]}
-		if [ $i -eq 0 ];
-			then
-				CONTROLLERS="tcp:$CONTROLLER:$CONTROLLERPORT"
-			else
-				CONTROLLERS="$CONTROLLERS tcp:$CONTROLLER:$CONTROLLERPORT"
-		fi
-	done
-
-	ovs-vsctl set-controller $BRIDGENAME $CONTROLLERS &&
-	ovs-vsctl set-fail-mode $BRIDGENAME secure &&
-	ovs-vsctl set controller $BRIDGENAME connection-mode=out-of-band &&
-	ovs-vsctl set bridge $BRIDGENAME other-config:datapath-id=$DPID
-
-	if [ "$TYPE_OF_TUNNEL" = "vxlan"];then
+	ii=0
+	for j in ${INTERFACES[@]}; do
 		
-		if [ "$OSHI_VXLAN_TYPE" = "one_bridge"];then
-			create_vxlan_interfaces
-		elif [ "$OSHI_VXLAN_TYPE" = "two_bridge"];then
-			create_vxlan_bridge
-		fi
+		create_vxlan_bridge
 
-		echo -e "\n-Adding interfaces to bridge $BRIDGENAME"
+		echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE-$j"
+		
+		#TODO: solo le tap che stanno su quella eth 
+
 		for i in ${TAP[@]}; do
     		eval remoteport=\${${i}[1]}
 			eval remoteaddr=\${!$i[2]}
-			ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=flow options:dst_port=$remoteport
+			ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
 		done
-	else
-		echo -e "\n-Adding interfaces to bridge $BRIDGENAME"
+
+
+		echo -e "\n-Adding internal virtual interfaces to bridge $TUNL_BRIDGE-$j"
+		for i in ${QUAGGAINT[@]}; do
+			ovs-vsctl add-port $TUNL_BRIDGE-$j $i -- set Interface $i type=internal
+		done
+		declare -a ofporttap &&
+		declare -a ofportquaggaint &&
+
 		for i in ${TAP[@]}; do
-			ovs-vsctl add-port $BRIDGENAME $i
+		    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
 		done
-	fi
 
-	echo -e "\n-Adding internal virtual interfaces to OpenVSwitch"
-	for i in ${QUAGGAINT[@]}; do
-		ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=internal
+		for i in ${QUAGGAINT[@]}; do
+			OFPORTSQUAGGAINT[${#OFPORTSQUAGGAINT[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+		done
+		for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
+		        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSQUAGGAINT[$i]}
+		        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${OFPORTSQUAGGAINT[$i]},action=output:${OFPORTSTAP[$i]}
+		done
+
+		ii=$((ii+1))
 	done
-	
-	#for VLL Pusher : TODO pusher port  for vxlan, non serve piu?
-	# if [ -z $VXLAN ];then
-	# 	for i in ${TUNTAP[@]}; do
-	# 	        ovs-vsctl add-port $BRIDGENAME $i
-	# 	done
-	# fi
-	#for VLL Pusher end
-	
-	echo -e "\n-Creating static rules on OpenVSwitch"
-	declare -a ofporttap &&
-	declare -a ofportquaggaint &&
-
-	for i in ${TAP[@]}; do
-	    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-	done
-
-	for i in ${QUAGGAINT[@]}; do
-		OFPORTSQUAGGAINT[${#OFPORTSQUAGGAINT[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-	done
-	for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
-	        ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSQUAGGAINT[$i]}
-	        ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=300,in_port=${OFPORTSQUAGGAINT[$i]},action=output:${OFPORTSTAP[$i]}
-	done
-
-	ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=301,dl_type=0x88cc,action=controller 
-	ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=301,dl_type=0x8942,action=controller 
-
 }
+
 
 create_vxlan_interfaces () {
 
@@ -347,6 +308,21 @@ enable password ${ROUTERPWD}
 interface lo
 ip address $LOOPBACK
 link-detect" > /etc/quagga/zebra.conf &&
+
+if [ "$TYPE_OF_TUNNEL" = "openvpn" ];then
+
+for i in ${TAP[@]}; do
+eval quaggaintaddr=\${${i}[3]}
+echo -e "
+interface ${i}
+ip address $quaggaintaddr
+link-detect" >> /etc/quagga/zebra.conf
+done
+
+fi
+
+if [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
+
 for i in ${QUAGGAINT[@]}; do
 eval quaggaintaddr=\${${i}[0]}
 echo -e "
@@ -355,6 +331,7 @@ ip address $quaggaintaddr
 link-detect" >> /etc/quagga/zebra.conf
 done
 
+fi
 # OSPFD.CONF
 echo -e "! -*- ospf -*-
 !
@@ -364,6 +341,21 @@ log file /var/log/quagga/ospfd.log\n
 interface lo
 ospf cost ${LOOPBACK[1]}
 ospf hello-interval ${LOOPBACK[2]}\n" > /etc/quagga/ospfd.conf &&
+
+if [ "$TYPE_OF_TUNNEL" = "openvpn" ];then
+
+for i in ${TAP[@]}; do
+eval quaggaospfcost=\${${i}[4]}
+eval quaggahellointerval=\${${i}[5]}
+echo -e "interface $i
+ospf cost $quaggaospfcost
+ospf hello-interval $quaggahellointerval\n" >> /etc/quagga/ospfd.conf
+done
+
+fi
+
+if [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
+
 for i in ${QUAGGAINT[@]}; do
 eval quaggaospfcost=\${${i}[1]}
 eval quaggahellointerval=\${${i}[2]}
@@ -371,6 +363,9 @@ echo -e "interface $i
 ospf cost $quaggaospfcost
 ospf hello-interval $quaggahellointerval\n" >> /etc/quagga/ospfd.conf
 done
+
+fi
+
 echo -e "router ospf\n" >> /etc/quagga/ospfd.conf
 for i in ${OSPFNET[@]}; do
 	eval quaggaannouncednet=\${${i}[0]}
@@ -412,14 +407,17 @@ echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf &&
 echo -e "\n-Starting Quagga daemon"
 /etc/init.d/quagga start
 
-echo -e "\n-Configuring OpenVSwitch"
 
-oshi
+if [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
+	echo -e "\n-Configuring OpenVSwitch"
+	plain_ip_router_vxlan
 
-# Appending rules to reconfig OVS port associations when the service start, to the service file /etc/init.d/openvswitchd
-echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"
-sed -i '72a\
-bash /etc/dreamer/reconfig-device.sh' /etc/init.d/openvswitchd
+	# Appending rules to reconfig OVS port associations when the service start, to the service file /etc/init.d/openvswitchd
+	echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"
+	sed -i '72a\
+	bash /etc/dreamer/reconfig-device.sh' /etc/init.d/openvswitchd
+
+fi
 
 echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
 echo -e "cd /etc/dreamer" >> /root/.bashrc

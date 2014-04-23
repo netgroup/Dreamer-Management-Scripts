@@ -40,11 +40,11 @@ oshi () {
 	ovs-vsctl set controller $BRIDGENAME connection-mode=out-of-band &&
 	ovs-vsctl set bridge $BRIDGENAME other-config:datapath-id=$DPID
 
-	if [ "$TYPE_OF_TUNNEL" = "vxlan"];then
+	if [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
 		
-		if [ "$OSHI_VXLAN_TYPE" = "one_bridge"];then
+		if [ "$OSHI_VXLAN_TYPE" = "one_bridge" ];then
 			create_vxlan_interfaces
-		elif [ "$OSHI_VXLAN_TYPE" = "two_bridge"];then
+		elif [ "$OSHI_VXLAN_TYPE" = "two_bridge" ];then
 			create_vxlan_bridge
 		fi
 
@@ -65,14 +65,6 @@ oshi () {
 	for i in ${QUAGGAINT[@]}; do
 		ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=internal
 	done
-	
-	#for VLL Pusher : TODO pusher port  for vxlan, non serve piu?
-	# if [ -z $VXLAN ];then
-	# 	for i in ${TUNTAP[@]}; do
-	# 	        ovs-vsctl add-port $BRIDGENAME $i
-	# 	done
-	# fi
-	#for VLL Pusher end
 	
 	echo -e "\n-Creating static rules on OpenVSwitch"
 	declare -a ofporttap &&
@@ -106,8 +98,7 @@ create_vxlan_interfaces () {
 		ip link set ${INTERFACES[$ii]} up
 		vconfig add ${INTERFACES[$ii]} $SLICEVLAN
 		ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
-		ifconfig $j $interface_ip.$SLICEVLAN netmask $interface_netmask
-	#	ifconfig $TUNL_BRIDGE-$i 0
+		ifconfig $j.$SLICEVLAN $interface_ip netmask $interface_netmask
 		ip r d 192.168.0.0/16 dev $j.$SLICEVLAN 
 		ii=$((ii+1))
 	done

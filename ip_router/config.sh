@@ -13,6 +13,40 @@ echo "#############################################################"
 TUNL_BRIDGE=br-tun
 TYPE_OF_TUNNEL="vxlan"
 #TYPE_OF_TUNNEL="openvpn"
+# with openvpn tunnel you have to modify testbed.sh
+
+plain_ip_router_vxlan_2 () {
+	
+	create_vxlan_interfaces
+
+	echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE"
+	
+	for i in ${TAP[@]}; do
+		eval remoteport=\${${i}[1]}
+		eval remoteaddr=\${!$i[2]}
+		ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
+	done
+
+	echo -e "\n-Adding internal virtual interfaces to bridge $TUNL_BRIDGE"
+	for i in ${QUAGGAINT[@]}; do
+		ovs-vsctl add-port $TUNL_BRIDGE $i -- set Interface $i type=internal
+	done
+	declare -a ofporttap &&
+	declare -a ofportquaggaint &&
+
+	for i in ${TAP[@]}; do
+	    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+	done
+
+	for i in ${QUAGGAINT[@]}; do
+		OFPORTSQUAGGAINT[${#OFPORTSQUAGGAINT[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+	done
+	for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
+	        ovs-ofctl add-flow $TUNL_BRIDGE hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSQUAGGAINT[$i]}
+	        ovs-ofctl add-flow $TUNL_BRIDGE hard_timeout=0,priority=300,in_port=${OFPORTSQUAGGAINT[$i]},action=output:${OFPORTSTAP[$i]}
+	done
+}
+
 
 plain_ip_router_vxlan () {
 	
@@ -68,7 +102,6 @@ create_vxlan_interfaces () {
 		vconfig add ${INTERFACES[$ii]} $SLICEVLAN
 		ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
 		ifconfig $j $interface_ip.$SLICEVLAN netmask $interface_netmask
-	#	ifconfig $TUNL_BRIDGE-$i 0
 		ip r d 192.168.0.0/16 dev $j.$SLICEVLAN 
 		ii=$((ii+1))
 	done
@@ -319,9 +352,7 @@ ip address $quaggaintaddr
 link-detect" >> /etc/quagga/zebra.conf
 done
 
-fi
-
-if [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
+elif [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
 
 for i in ${QUAGGAINT[@]}; do
 eval quaggaintaddr=\${${i}[0]}
@@ -352,9 +383,7 @@ ospf cost $quaggaospfcost
 ospf hello-interval $quaggahellointerval\n" >> /etc/quagga/ospfd.conf
 done
 
-fi
-
-if [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
+elif [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
 
 for i in ${QUAGGAINT[@]}; do
 eval quaggaospfcost=\${${i}[1]}

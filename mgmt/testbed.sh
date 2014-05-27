@@ -15,6 +15,9 @@
 #
 ######### ISTRUCTIONS (ONLY FOR OSHI NODES) #################################################################
 #
+# MGMTNET - mgmt testbed network, netmask, gateway, management interface
+# OFELIA default: 10.216.0.0 255.255.0.0 10.216.32.1 eth0
+#
 # HOST - machine and router hostname - i.e. oshi
 #
 # ROUTERPWD - Machine password and quagga router password - i.e. dreamer
@@ -92,6 +95,7 @@ ROUTERPWD=dreamer
 DPID=0000000000000001
 SLICEVLAN=107
 BRIDGENAME=br-dreamer
+declare -a MGMTNET=(10.216.0.0 255.255.0.0 10.216.32.1 eth0)
 declare -a CTRL=(CTRL1)
 declare -a CTRL1=(10.0.10.2 6633)
 declare -a LOOPBACK=(10.0.100.1/32 1 1)
@@ -120,6 +124,7 @@ ROUTERPWD=dreamer
 DPID=0000000000000002
 SLICEVLAN=107
 BRIDGENAME=br-dreamer
+declare -a MGMTNET=(10.216.0.0 255.255.0.0 10.216.32.1 eth0)
 declare -a CTRL=(CTRL1)
 declare -a CTRL1=(10.0.10.2 6633)
 declare -a LOOPBACK=(10.0.100.2/32 1 1)
@@ -148,6 +153,7 @@ ROUTERPWD=dreamer
 DPID=0000000000000003
 SLICEVLAN=107
 BRIDGENAME=br-dreamer
+declare -a MGMTNET=(10.216.0.0 255.255.0.0 10.216.32.1 eth0)
 declare -a CTRL=(CTRL1)
 declare -a CTRL1=(10.0.10.2 6633)
 declare -a LOOPBACK=(10.0.100.3/32 1 1)
@@ -173,6 +179,7 @@ declare -a NET4=(10.0.100.3/32 0.0.0.0)
 # 10.216.33.142 - start
 HOST=dreamerofctrl
 SLICEVLAN=107
+declare -a MGMTNET=(10.216.0.0 255.255.0.0 10.216.32.1 eth0)
 declare -a INTERFACES=(eth1)
 declare -a eth1=(192.168.1.31 255.255.0.0)
 declare -a TAP=(tap1)
@@ -183,6 +190,7 @@ declare -a ENDIP1=(192.168.1.11 eth1)
 # 10.216.33.79 - start
 HOST=endusernode01
 SLICEVLAN=107
+declare -a MGMTNET=(10.216.0.0 255.255.0.0 10.216.32.1 eth0)
 declare -a INTERFACES=(eth1)
 declare -a eth1=(192.168.2.11 255.255.0.0)
 declare -a TAP=(tap1)
@@ -193,6 +201,7 @@ declare -a ENDIP1=(192.168.2.31 eth1)
 # 10.216.33.80 - start
 HOST=endusernode02
 SLICEVLAN=107
+declare -a MGMTNET=(10.216.0.0 255.255.0.0 10.216.32.1 eth0)
 declare -a INTERFACES=(eth1)
 declare -a eth1=(192.168.2.21 255.255.0.0)
 declare -a TAP=(tap1)

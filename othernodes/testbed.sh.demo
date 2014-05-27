@@ -12,6 +12,9 @@
 #
 ######### ISTRUCTIONS (FOR ALL OTHER DREAMER NODES) #################################################################
 #
+# MGMTNET - mgmt testbed network, netmask, gateway, management interface
+# OFELIA default: 10.216.0.0 255.255.0.0 10.216.32.1 eth0
+#
 # HOST - machine and router hostname - i.e. oshi
 #
 # SLICEVLAN - testbed slice VLAN - i.e. 200
@@ -41,6 +44,7 @@
 #
 #HOST=endusernode
 #SLICEVLAN=100
+#declare -a MGMTNET=(10.216.0.0 255.255.0.0 10.216.32.1 eth0)
 #declare -a INTERFACES=(eth1)
 #declare -a eth1=(192.168.2.21 255.255.0.0)
 #declare -a TAP=(tap1)

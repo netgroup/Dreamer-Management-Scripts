@@ -252,14 +252,19 @@ done
 echo -e "\n-Starting OpenVPN service"
 /etc/init.d/openvpn start 
 
-fi
-
-plain_node_vxlan
-
-
 echo -e "\n-Adding static routes for ${STATICROUTE[3]} device"
 route add -net ${MGMTNET[0]} netmask ${MGMTNET[1]} gw ${MGMTNET[2]} dev ${MGMTNET[3]} &&
 route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev ${STATICROUTE[3]} &&
+
+else
+
+plain_node_vxlan
+
+echo -e "\n-Adding static routes for ${STATICROUTE[3]} device"
+route add -net ${MGMTNET[0]} netmask ${MGMTNET[1]} gw ${MGMTNET[2]} dev ${MGMTNET[3]} &&
+route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev vi-${STATICROUTE[3]} &&
+
+fi
 
 echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
 echo -e "cd /etc/dreamer" >> /root/.bashrc

@@ -437,7 +437,7 @@ echo -e "\n-Starting Quagga daemon"
 
 if [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
 	echo -e "\n-Configuring OpenVSwitch"
-
+	plain_ip_router_vxlan_2
 	# Appending rules to reconfig OVS port associations when the service start, to the service file /etc/init.d/openvswitchd
 	echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"
 	sed -i '72a\

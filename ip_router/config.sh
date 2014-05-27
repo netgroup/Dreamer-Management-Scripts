@@ -214,11 +214,11 @@ fi
 echo -e "\n-Checking addresses compatibilities between testbed mgmt network and chosen addresses"
 MGMTADDR=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}')
 MGMTMASK=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}')
-MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK | grep Network | awk '{split($0,a," "); print a[2]}')
+MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
 for (( i=0; i<${#INTERFACES[@]}; i++ )); do
         eval addr=\${${INTERFACES[$i]}[0]}
         eval netmask=\${${INTERFACES[$i]}[1]}
-        CURRENTNET=$(ipcalc $addr $netmask | grep Network | awk '{split($0,a," "); print a[2]}')
+        CURRENTNET=$(ipcalc $addr $netmask 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
         if [ $CURRENTNET == $MGMTNETWORK ]
                 then
                         echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
@@ -228,7 +228,7 @@ for (( i=0; i<${#INTERFACES[@]}; i++ )); do
 done
 for i in ${QUAGGAINT[@]}; do
         eval QUAGGAIP=\${${i}[0]}
-        CURRENTNET=$(ipcalc $QUAGGAIP | grep Network | awk '{split($0,a," "); print a[2]}')
+        CURRENTNET=$(ipcalc $QUAGGAIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
         if [ $CURRENTNET == $MGMTNETWORK ]
                 then
                         echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."

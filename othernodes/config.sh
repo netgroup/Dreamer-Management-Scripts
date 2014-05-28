@@ -22,26 +22,39 @@ plain_node_vxlan2 () {
         ovs-vsctl add-br $TUNL_BRIDGE
         echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE"
         
-        #TODO: solo le tap che stanno su quella eth 
-        y=0
+        # y=0
         for i in ${TAP[@]}; do
                 eval remoteport=\${${i}[1]} # cambiare con nuovo array tap
                 eval remoteaddr=\${!$i[3]}
                 # ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
                 ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport
-                ovs-vsctl add-port $TUNL_BRIDGE vi-$i -- set Interface vi-$i type=internal
-                eval ip=\${${TAP[$y]}[2]}
-                echo $ip
-                ip a a $ip  dev vi-$i
-                y=$((y+1))
+                # ovs-vsctl add-port $TUNL_BRIDGE vi-$i -- set Interface vi-$i type=internal
+                # eval ip=\${${TAP[$y]}[2]}
+                # echo $ip
+                # ip a a $ip  dev vi-$i
+                # y=$((y+1))
         done
+
+        echo -e "\n-Adding internal virtual interfaces to OpenVSwitch"
+
+        y=0
+        for i in ${VI[@]}; do
+            ovs-vsctl add-port $TUNL_BRIDGE $i -- set Interface $i type=internal
+            eval ip=\${${VI[$y]}[2]}
+            echo $ip
+            ip a a $ip  dev $i
+            y=$((y+1))
+        done
+
         declare -a port_tap &&
         declare -a port_vi_tap &&
         for i in ${TAP[@]}; do
             PORT_TAP[${#PORT_TAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-            PORT_VI_TAP[${#PORT_VI_TAP[@]}]=$(ovs-vsctl find Interface name=vi-$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+            # PORT_VI_TAP[${#PORT_VI_TAP[@]}]=$(ovs-vsctl find Interface name=vi-$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
         done
-        
+        for i in ${VI[@]}; do
+            PORT_VI_TAP[${#PORT_VI_TAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+        done
         for (( i=0; i<${#PORT_TAP[@]}; i++ )); do
                 ovs-ofctl add-flow $TUNL_BRIDGE hard_timeout=0,priority=300,in_port=${PORT_TAP[$i]},action=output:${PORT_VI_TAP[$i]}
                 ovs-ofctl add-flow $TUNL_BRIDGE hard_timeout=0,priority=300,in_port=${PORT_VI_TAP[$i]},action=output:${PORT_TAP[$i]}
@@ -327,7 +340,7 @@ plain_node_vxlan
 
 echo -e "\n-Adding static routes for ${STATICROUTE[3]} device"
 route add -net ${MGMTNET[0]} netmask ${MGMTNET[1]} gw ${MGMTNET[2]} dev ${MGMTNET[3]} &&
-route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev vi-${STATICROUTE[3]}
+route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev ${STATICROUTE[3]}
 
 fi
 

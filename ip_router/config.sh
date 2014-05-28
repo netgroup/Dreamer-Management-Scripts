@@ -11,8 +11,8 @@ echo "#############################################################"
 
 #temporaneamente...
 TUNL_BRIDGE=br-tun
-TYPE_OF_TUNNEL="vxlan"
-#TYPE_OF_TUNNEL="openvpn"
+TUNNELING="VXLAN"
+#TUNNELING="OpenVPN"
 # with openvpn tunnel you have to modify testbed.sh
 
 plain_ip_router_vxlan_2 () {
@@ -24,70 +24,72 @@ plain_ip_router_vxlan_2 () {
 	for i in ${TAP[@]}; do
 		eval remoteport=\${${i}[1]}
 		eval remoteaddr=\${!$i[2]}
-		ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
+		# ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
+		ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport
+
 	done
 
 	echo -e "\n-Adding internal virtual interfaces to bridge $TUNL_BRIDGE"
-	for i in ${QUAGGAINT[@]}; do
+	for i in ${VI[@]}; do
 		ovs-vsctl add-port $TUNL_BRIDGE $i -- set Interface $i type=internal
 	done
 	declare -a ofporttap &&
-	declare -a ofportquaggaint &&
+	declare -a ofportVI &&
 
 	for i in ${TAP[@]}; do
 	    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
 	done
 
-	for i in ${QUAGGAINT[@]}; do
-		OFPORTSQUAGGAINT[${#OFPORTSQUAGGAINT[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+	for i in ${VI[@]}; do
+		OFPORTSVI[${#OFPORTSVI[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
 	done
 	for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
-	        ovs-ofctl add-flow $TUNL_BRIDGE hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSQUAGGAINT[$i]}
-	        ovs-ofctl add-flow $TUNL_BRIDGE hard_timeout=0,priority=300,in_port=${OFPORTSQUAGGAINT[$i]},action=output:${OFPORTSTAP[$i]}
+	        ovs-ofctl add-flow $TUNL_BRIDGE hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSVI[$i]}
+	        ovs-ofctl add-flow $TUNL_BRIDGE hard_timeout=0,priority=300,in_port=${OFPORTSVI[$i]},action=output:${OFPORTSTAP[$i]}
 	done
 }
 
 
-plain_ip_router_vxlan () {
+# plain_ip_router_vxlan () {
 	
-	ii=0
-	for j in ${INTERFACES[@]}; do
+# 	ii=0
+# 	for j in ${INTERFACES[@]}; do
 		
-		create_vxlan_bridge
+# 		create_vxlan_bridge
 
-		echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE-$j"
+# 		echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE-$j"
 		
-		#TODO: solo le tap che stanno su quella eth 
+# 		#TODO: solo le tap che stanno su quella eth 
 
-		for i in ${TAP[@]}; do
-    		eval remoteport=\${${i}[1]}
-			eval remoteaddr=\${!$i[2]}
-			ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
-		done
+# 		for i in ${TAP[@]}; do
+#     		eval remoteport=\${${i}[1]}
+# 			eval remoteaddr=\${!$i[2]}
+# 			ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
+# 		done
 
 
-		echo -e "\n-Adding internal virtual interfaces to bridge $TUNL_BRIDGE-$j"
-		for i in ${QUAGGAINT[@]}; do
-			ovs-vsctl add-port $TUNL_BRIDGE-$j $i -- set Interface $i type=internal
-		done
-		declare -a ofporttap &&
-		declare -a ofportquaggaint &&
+# 		echo -e "\n-Adding internal virtual interfaces to bridge $TUNL_BRIDGE-$j"
+# 		for i in ${VI[@]}; do
+# 			ovs-vsctl add-port $TUNL_BRIDGE-$j $i -- set Interface $i type=internal
+# 		done
+# 		declare -a ofporttap &&
+# 		declare -a ofportVI &&
 
-		for i in ${TAP[@]}; do
-		    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-		done
+# 		for i in ${TAP[@]}; do
+# 		    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+# 		done
 
-		for i in ${QUAGGAINT[@]}; do
-			OFPORTSQUAGGAINT[${#OFPORTSQUAGGAINT[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-		done
-		for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
-		        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSQUAGGAINT[$i]}
-		        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${OFPORTSQUAGGAINT[$i]},action=output:${OFPORTSTAP[$i]}
-		done
+# 		for i in ${VI[@]}; do
+# 			OFPORTSVI[${#OFPORTSVI[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+# 		done
+# 		for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
+# 		        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSVI[$i]}
+# 		        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${OFPORTSVI[$i]},action=output:${OFPORTSTAP[$i]}
+# 		done
 
-		ii=$((ii+1))
-	done
-}
+# 		ii=$((ii+1))
+# 	done
+# }
 
 
 create_vxlan_interfaces () {
@@ -107,7 +109,7 @@ create_vxlan_interfaces () {
 	# set static routes
     declare -a ENDIPS
     for i in ${TAP[@]}; do
-            eval ELEMENT=\${${i}[2]}
+            eval ELEMENT=\${${i}[1]}
             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
             fi
@@ -121,40 +123,40 @@ create_vxlan_interfaces () {
 }
 
 
-create_vxlan_bridge () {
+# create_vxlan_bridge () {
 
-	ii=0
-	for j in ${INTERFACES[@]}; do
-		echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE-$j"
+# 	ii=0
+# 	for j in ${INTERFACES[@]}; do
+# 		echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE-$j"
 
-		eval interface_ip=\${${j}[0]}
-		eval interface_netmask=\${${j}[1]}
-		ip link set ${INTERFACES[$ii]} up
-		vconfig add ${INTERFACES[$ii]} $SLICEVLAN
-		ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
-		ovs-vsctl add-br $TUNL_BRIDGE-$j
-		ovs-vsctl add-port  $TUNL_BRIDGE-$j ${INTERFACES[$ii]}.$SLICEVLAN
-		ifconfig $TUNL_BRIDGE-$j $interface_ip netmask $interface_netmask
-	#	ifconfig $TUNL_BRIDGE-$i 0
-		ip r d 192.168.0.0/16 dev $TUNL_BRIDGE-$j 
-		ii=$((ii+1))
-	done
+# 		eval interface_ip=\${${j}[0]}
+# 		eval interface_netmask=\${${j}[1]}
+# 		ip link set ${INTERFACES[$ii]} up
+# 		vconfig add ${INTERFACES[$ii]} $SLICEVLAN
+# 		ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
+# 		ovs-vsctl add-br $TUNL_BRIDGE-$j
+# 		ovs-vsctl add-port  $TUNL_BRIDGE-$j ${INTERFACES[$ii]}.$SLICEVLAN
+# 		ifconfig $TUNL_BRIDGE-$j $interface_ip netmask $interface_netmask
+# 	#	ifconfig $TUNL_BRIDGE-$i 0
+# 		ip r d 192.168.0.0/16 dev $TUNL_BRIDGE-$j 
+# 		ii=$((ii+1))
+# 	done
 
-	# set static routes
-    declare -a ENDIPS
-    for i in ${TAP[@]}; do
-            eval ELEMENT=\${${i}[2]}
-            if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
-                    ENDIPS[${#ENDIPS[@]}]=$ELEMENT
-            fi
-    done
-    for (( i=0; i<${#ENDIPS[@]}; i++ )); do
-            eval remoteaddr=\${${ENDIPS[$i]}[0]}
-            eval interface=\${${ENDIPS[$i]}[1]}
-            ip r a $remoteaddr dev $TUNL_BRIDGE-$interface  
-    done
+# 	# set static routes
+#     declare -a ENDIPS
+#     for i in ${TAP[@]}; do
+#             eval ELEMENT=\${${i}[2]}
+#             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
+#                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
+#             fi
+#     done
+#     for (( i=0; i<${#ENDIPS[@]}; i++ )); do
+#             eval remoteaddr=\${${ENDIPS[$i]}[0]}
+#             eval interface=\${${ENDIPS[$i]}[1]}
+#             ip r a $remoteaddr dev $TUNL_BRIDGE-$interface  
+#     done
 
-}
+# }
 
 
 echo -e "\n-Looking for a valid configuration file..."
@@ -226,7 +228,7 @@ for (( i=0; i<${#INTERFACES[@]}; i++ )); do
                         exit $EXIT_ERROR
         fi
 done
-for i in ${QUAGGAINT[@]}; do
+for i in ${VI[@]}; do
         eval QUAGGAIP=\${${i}[0]}
         CURRENTNET=$(ipcalc $QUAGGAIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
         if [ $CURRENTNET == $MGMTNETWORK ]
@@ -237,7 +239,7 @@ for i in ${QUAGGAINT[@]}; do
         fi
 done
 
-if [ "$TYPE_OF_TUNNEL" = "openvpn" ]; then
+if [ "$TUNNELING" = "OpenVPN" ]; then
 
 echo -e "\n-Setting up physical interfaces"
 # deleting white spaces in /etc/network/interfaces
@@ -301,7 +303,7 @@ sed -i "1a\127.0.0.1\t$HOST" /etc/hosts &&
 hostname $HOST &&
 
 
-if [ "$TYPE_OF_TUNNEL" = "openvpn" ];then
+if [ "$TUNNELING" = "OpenVPN" ];then
 
 echo -e "\n-Configuring OpenVPN"
 # writing *.conf OpenVPN files in /etc/openvpn
@@ -340,23 +342,23 @@ interface lo
 ip address $LOOPBACK
 link-detect" > /etc/quagga/zebra.conf &&
 
-if [ "$TYPE_OF_TUNNEL" = "openvpn" ];then
+if [ "$TUNNELING" = "OpenVPN" ];then
 
 for i in ${TAP[@]}; do
-eval quaggaintaddr=\${${i}[3]}
+eval VIaddr=\${${i}[3]}
 echo -e "
 interface ${i}
-ip address $quaggaintaddr
+ip address $VIaddr
 link-detect" >> /etc/quagga/zebra.conf
 done
 
-elif [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
+elif [ "$TUNNELING" = "VXLAN" ];then
 
-for i in ${QUAGGAINT[@]}; do
-eval quaggaintaddr=\${${i}[0]}
+for i in ${VI[@]}; do
+eval VIaddr=\${${i}[0]}
 echo -e "
 interface ${i}
-ip address $quaggaintaddr
+ip address $VIaddr
 link-detect" >> /etc/quagga/zebra.conf
 done
 
@@ -371,7 +373,7 @@ interface lo
 ospf cost ${LOOPBACK[1]}
 ospf hello-interval ${LOOPBACK[2]}\n" > /etc/quagga/ospfd.conf &&
 
-if [ "$TYPE_OF_TUNNEL" = "openvpn" ];then
+if [ "$TUNNELING" = "OpenVPN" ];then
 
 for i in ${TAP[@]}; do
 eval quaggaospfcost=\${${i}[4]}
@@ -381,9 +383,9 @@ ospf cost $quaggaospfcost
 ospf hello-interval $quaggahellointerval\n" >> /etc/quagga/ospfd.conf
 done
 
-elif [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
+elif [ "$TUNNELING" = "VXLAN" ];then
 
-for i in ${QUAGGAINT[@]}; do
+for i in ${VI[@]}; do
 eval quaggaospfcost=\${${i}[1]}
 eval quaggahellointerval=\${${i}[2]}
 echo -e "interface $i
@@ -435,7 +437,7 @@ echo -e "\n-Starting Quagga daemon"
 /etc/init.d/quagga start
 
 
-if [ "$TYPE_OF_TUNNEL" = "vxlan" ];then
+if [ "$TUNNELING" = "VXLAN" ];then
 	echo -e "\n-Configuring OpenVSwitch"
 	plain_ip_router_vxlan_2
 	# Appending rules to reconfig OVS port associations when the service start, to the service file /etc/init.d/openvswitchd

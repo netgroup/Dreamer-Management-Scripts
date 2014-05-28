@@ -25,9 +25,10 @@ plain_node_vxlan2 () {
         #TODO: solo le tap che stanno su quella eth 
         y=0
         for i in ${TAP[@]}; do
-                eval remoteport=\${${i}[1]}
+                eval remoteport=\${${i}[1]} # cambiare con nuovo array tap
                 eval remoteaddr=\${!$i[3]}
-                ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
+                # ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
+                ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport
                 ovs-vsctl add-port $TUNL_BRIDGE vi-$i -- set Interface vi-$i type=internal
                 eval ip=\${${TAP[$y]}[2]}
                 echo $ip
@@ -64,7 +65,7 @@ create_vxlan_interfaces () {
         # set static routes
     declare -a ENDIPS
     for i in ${TAP[@]}; do
-            eval ELEMENT=\${${i}[3]}
+            eval ELEMENT=\${${i}[1]} # cambiare con nuovo array tap
             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
             fi
@@ -77,79 +78,79 @@ create_vxlan_interfaces () {
 }
 
 
-plain_node_vxlan () {
+# plain_node_vxlan () {
         
-        ii=0
-        for j in ${INTERFACES[@]}; do
+#         ii=0
+#         for j in ${INTERFACES[@]}; do
                 
-                create_vxlan_bridge
+#                 create_vxlan_bridge
 
-                echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE-$j"
+#                 echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE-$j"
                 
-                #TODO: solo le tap che stanno su quella eth 
+#                 #TODO: solo le tap che stanno su quella eth 
 
-                y=0
-                for i in ${TAP[@]}; do
-                        eval remoteport=\${${i}[1]}
-                        eval remoteaddr=\${!$i[3]}
-                        ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
-                        ovs-vsctl add-port $TUNL_BRIDGE-$j vi-$i -- set Interface vi-$i type=internal
-                        eval ip=\${${TAP[$y]}[2]}
-                        echo $ip
-                        ip a a $ip  dev vi-$i
-                        y=$((y+1))
-                done
-                declare -a port_tap &&
-                declare -a port_vi_tap &&
+#                 y=0
+#                 for i in ${TAP[@]}; do
+#                         eval remoteport=\${${i}[1]} # cambiare con nuovo array tap
+#                         eval remoteaddr=\${!$i[3]} 
+#                         ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
+#                         ovs-vsctl add-port $TUNL_BRIDGE-$j vi-$i -- set Interface vi-$i type=internal
+#                         eval ip=\${${TAP[$y]}[2]}
+#                         echo $ip
+#                         ip a a $ip  dev vi-$i
+#                         y=$((y+1))
+#                 done
+#                 declare -a port_tap &&
+#                 declare -a port_vi_tap &&
 
-                for i in ${TAP[@]}; do
-                    PORT_TAP[${#PORT_TAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-                    PORT_VI_TAP[${#PORT_VI_TAP[@]}]=$(ovs-vsctl find Interface name=vi-$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-                done
+#                 for i in ${TAP[@]}; do
+#                     PORT_TAP[${#PORT_TAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+#                     PORT_VI_TAP[${#PORT_VI_TAP[@]}]=$(ovs-vsctl find Interface name=vi-$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+#                 done
                 
-                for (( i=0; i<${#PORT_TAP[@]}; i++ )); do
-                        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${PORT_TAP[$i]},action=output:${PORT_VI_TAP[$i]}
-                        ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${PORT_VI_TAP[$i]},action=output:${PORT_TAP[$i]}
-                done
+#                 for (( i=0; i<${#PORT_TAP[@]}; i++ )); do
+#                         ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${PORT_TAP[$i]},action=output:${PORT_VI_TAP[$i]}
+#                         ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${PORT_VI_TAP[$i]},action=output:${PORT_TAP[$i]}
+#                 done
 
-                ii=$((ii+1))
-        done
-}
+#                 ii=$((ii+1))
+#         done
+# }
 
-create_vxlan_bridge () {
+# create_vxlan_bridge () {
 
-        ii=0
-        for j in ${INTERFACES[@]}; do
-                echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE-$j"
+#         ii=0
+#         for j in ${INTERFACES[@]}; do
+#                 echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE-$j"
 
-                eval interface_ip=\${${j}[0]}
-                eval interface_netmask=\${${j}[1]}
-                ip link set ${INTERFACES[$ii]} up
-                vconfig add ${INTERFACES[$ii]} $SLICEVLAN
-                ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
-                ovs-vsctl add-br $TUNL_BRIDGE-$j
-                ovs-vsctl add-port  $TUNL_BRIDGE-$j ${INTERFACES[$ii]}.$SLICEVLAN
-                ifconfig $TUNL_BRIDGE-$j $interface_ip netmask $interface_netmask
-        #       ifconfig $TUNL_BRIDGE-$i 0
-                ip r d 192.168.0.0/16 dev $TUNL_BRIDGE-$j 
-                ii=$((ii+1))
-        done
+#                 eval interface_ip=\${${j}[0]}
+#                 eval interface_netmask=\${${j}[1]}
+#                 ip link set ${INTERFACES[$ii]} up
+#                 vconfig add ${INTERFACES[$ii]} $SLICEVLAN
+#                 ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
+#                 ovs-vsctl add-br $TUNL_BRIDGE-$j
+#                 ovs-vsctl add-port  $TUNL_BRIDGE-$j ${INTERFACES[$ii]}.$SLICEVLAN
+#                 ifconfig $TUNL_BRIDGE-$j $interface_ip netmask $interface_netmask
+#         #       ifconfig $TUNL_BRIDGE-$i 0
+#                 ip r d 192.168.0.0/16 dev $TUNL_BRIDGE-$j 
+#                 ii=$((ii+1))
+#         done
 
-        # set static routes
-    declare -a ENDIPS
-    for i in ${TAP[@]}; do
-            eval ELEMENT=\${${i}[3]}
-            if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
-                    ENDIPS[${#ENDIPS[@]}]=$ELEMENT
-            fi
-    done
-    for (( i=0; i<${#ENDIPS[@]}; i++ )); do
-            eval remoteaddr=\${${ENDIPS[$i]}[0]}
-            eval interface=\${${ENDIPS[$i]}[1]}
-            ip r a $remoteaddr dev $TUNL_BRIDGE-$interface  
-    done
+#         # set static routes
+#     declare -a ENDIPS
+#     for i in ${TAP[@]}; do
+#             eval ELEMENT=\${${i}[3]} # cambiare con nuovo array tap
+#             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
+#                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
+#             fi
+#     done
+#     for (( i=0; i<${#ENDIPS[@]}; i++ )); do
+#             eval remoteaddr=\${${ENDIPS[$i]}[0]}
+#             eval interface=\${${ENDIPS[$i]}[1]}
+#             ip r a $remoteaddr dev $TUNL_BRIDGE-$interface  
+#     done
 
-}
+# }
 
 echo -e "\n-Looking for a valid configuration file..."
 echo -e "---> Looking for configuration file in current directory ($(pwd))..."
@@ -231,7 +232,7 @@ for i in ${TAP[@]}; do
         fi
 done
 
-if [ -z $VXLAN ]; then
+if [ "$TUNNELING" = "OpenVPN" ]; then
 
 echo -e "\n-Setting up physical interfaces"
 # deleting white spaces in /etc/network/interfaces
@@ -290,11 +291,11 @@ sed -i '2d' /etc/hosts
 sed -i "1a\127.0.0.1\t$HOST" /etc/hosts &&
 hostname $HOST &&
 
-if [ -z $VXLAN ]; then
+if [ "$TUNNELING" = "OpenVPN" ]; then
 
 echo -e "\n-Configuring OpenVPN"
 # writing *.conf OpenVPN files in /etc/openvpn
-for i in ${TAP[@]}; do
+for i in ${TAP[@]}; do 
 	eval localport=\${${i}[0]}
     eval remoteport=\${${i}[1]}
 	eval remoteaddr=\${!$i[3]}

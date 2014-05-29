@@ -11,8 +11,6 @@ echo "#############################################################"
 
 #temporaneamente...
 TUNL_BRIDGE=br-tun
-TESTBED=OFELIA
-TUNNELING=VXLAN
 
 
 plain_node_vxlan2 () {
@@ -227,58 +225,58 @@ fi
 if [ "$TESTBED" = "OFELIA" ]; then
 
 
-# Check addresses
-    echo -e "\n-Checking addresses compatibilities between testbed mgmt network and chosen addresses"
-    MGMTADDR=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}')
-    MGMTMASK=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}')
-    MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-    for (( i=0; i<${#INTERFACES[@]}; i++ )); do
-            eval addr=\${${INTERFACES[$i]}[0]}
-            eval netmask=\${${INTERFACES[$i]}[1]}
-            CURRENTNET=$(ipcalc $addr $netmask 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-            if [ $CURRENTNET == $MGMTNETWORK ]
-                    then
-                            echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-                            EXIT_ERROR=-1
-                            exit $EXIT_ERROR
-            fi
-    done
+# # Check addresses
+#     echo -e "\n-Checking addresses compatibilities between testbed mgmt network and chosen addresses"
+#     MGMTADDR=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}')
+#     MGMTMASK=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}')
+#     MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
+#     for (( i=0; i<${#INTERFACES[@]}; i++ )); do
+#             eval addr=\${${INTERFACES[$i]}[0]}
+#             eval netmask=\${${INTERFACES[$i]}[1]}
+#             CURRENTNET=$(ipcalc $addr $netmask 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
+#             if [ $CURRENTNET == $MGMTNETWORK ]
+#                     then
+#                             echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
+#                             EXIT_ERROR=-1
+#                             exit $EXIT_ERROR
+#             fi
+#     done
     
-    if [ "$TUNNELING" = "OpenVPN" ]; then
+#     if [ "$TUNNELING" = "OpenVPN" ]; then
 
-        for i in ${TAP[@]}; do
-        eval LOCALIP=\${${i}[2]}
-        CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-        if [ $CURRENTNET == $MGMTNETWORK ]
-                then
-                        echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-                        EXIT_ERROR=-1
-                        exit $EXIT_ERROR
-        fi
-        done
+#         for i in ${TAP[@]}; do
+#         eval LOCALIP=\${${i}[2]}
+#         CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
+#         if [ $CURRENTNET == $MGMTNETWORK ]
+#                 then
+#                         echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
+#                         EXIT_ERROR=-1
+#                         exit $EXIT_ERROR
+#         fi
+#         done
     
-    else
-        for i in ${VI[@]}; do
-        	eval LOCALIP=\${${i}[0]}
-        		if [ "$LOCALIP" != "0.0.0.0/32" ]; then
-                        CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-                        if [ $CURRENTNET == $MGMTNETWORK ]
-                                then
-                                        echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-                                        EXIT_ERROR=-1
-                                        exit $EXIT_ERROR
-                        fi
-                fi
-                CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-                if [ $CURRENTNET == $MGMTNETWORK ]
-                        then
-                                echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-                                EXIT_ERROR=-1
-                                exit $EXIT_ERROR
-                fi
-        done
-    fi
-fi
+#     else
+#         for i in ${VI[@]}; do
+#         	eval LOCALIP=\${${i}[0]}
+#         		if [ "$LOCALIP" != "0.0.0.0/32" ]; then
+#                         CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
+#                         if [ $CURRENTNET == $MGMTNETWORK ]
+#                                 then
+#                                         echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
+#                                         EXIT_ERROR=-1
+#                                         exit $EXIT_ERROR
+#                         fi
+#                 fi
+#                 CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
+#                 if [ $CURRENTNET == $MGMTNETWORK ]
+#                         then
+#                                 echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
+#                                 EXIT_ERROR=-1
+#                                 exit $EXIT_ERROR
+#                 fi
+#         done
+#     fi
+# fi
 
 if [ "$TUNNELING" = "OpenVPN" ]; then
 

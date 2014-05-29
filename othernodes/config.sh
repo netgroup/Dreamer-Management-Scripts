@@ -24,8 +24,8 @@ plain_node_vxlan2 () {
         
         # y=0
         for i in ${TAP[@]}; do
-                eval remoteport=\${${i}[1]} # cambiare con nuovo array tap
-                eval remoteaddr=\${!$i[3]}
+                eval remoteport=\${${i}[0]} # cambiare con nuovo array tap
+                eval remoteaddr=\${!$i[1]}
                 # ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
                 ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport
                 # ovs-vsctl add-port $TUNL_BRIDGE vi-$i -- set Interface vi-$i type=internal
@@ -40,7 +40,7 @@ plain_node_vxlan2 () {
         y=0
         for i in ${VI[@]}; do
             ovs-vsctl add-port $TUNL_BRIDGE $i -- set Interface $i type=internal
-            eval ip=\${${VI[$y]}[2]}
+            eval ip=\${${VI[$y]}[0]}
             echo $ip
             ip a a $ip  dev $i
             y=$((y+1))
@@ -68,6 +68,8 @@ create_vxlan_interfaces () {
                 echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE"
                 eval interface_ip=\${${j}[0]}
                 eval interface_netmask=\${${j}[1]}
+		echo $interface_ip
+		echo $interface_netmask
                 ip link set ${INTERFACES[$ii]} up
                 vconfig add ${INTERFACES[$ii]} $SLICEVLAN
                 ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
@@ -79,6 +81,7 @@ create_vxlan_interfaces () {
     declare -a ENDIPS
     for i in ${TAP[@]}; do
             eval ELEMENT=\${${i}[1]} # cambiare con nuovo array tap
+	    echo $ELEMENT
             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
             fi
@@ -86,6 +89,7 @@ create_vxlan_interfaces () {
     for (( i=0; i<${#ENDIPS[@]}; i++ )); do
             eval remoteaddr=\${${ENDIPS[$i]}[0]}
             eval interface=\${${ENDIPS[$i]}[1]}
+	    echo  $remoteaddr
             ip r a $remoteaddr dev $interface.$SLICEVLAN 
     done
 }
@@ -234,8 +238,8 @@ for (( i=0; i<${#INTERFACES[@]}; i++ )); do
                         exit $EXIT_ERROR
         fi
 done
-for i in ${TAP[@]}; do
-        eval LOCALIP=\${${i}[2]}
+for i in ${VI[@]}; do
+	eval LOCALIP=\${${i}[0]}
         CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
         if [ $CURRENTNET == $MGMTNETWORK ]
                 then
@@ -336,7 +340,7 @@ route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} 
 
 else
 
-plain_node_vxlan
+plain_node_vxlan2
 
 echo -e "\n-Adding static routes for ${STATICROUTE[3]} device"
 route add -net ${MGMTNET[0]} netmask ${MGMTNET[1]} gw ${MGMTNET[2]} dev ${MGMTNET[3]} &&

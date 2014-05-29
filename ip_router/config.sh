@@ -102,7 +102,6 @@ create_vxlan_interfaces () {
 		vconfig add ${INTERFACES[$ii]} $SLICEVLAN
 		ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
 		ifconfig $j.$SLICEVLAN $interface_ip netmask $interface_netmask
-		ip r d 192.168.0.0/16 dev $j.$SLICEVLAN 
 		ii=$((ii+1))
 	done
 

@@ -222,7 +222,7 @@ if [ -f testbed.sh ];
 fi
 
 
-if [ "$TESTBED" = "OFELIA" ]; then
+# if [ "$TESTBED" = "OFELIA" ]; then
 
 
 # # Check addresses

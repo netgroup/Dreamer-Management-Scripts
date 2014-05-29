@@ -99,7 +99,6 @@ create_vxlan_interfaces () {
 		vconfig add ${INTERFACES[$ii]} $SLICEVLAN
 		ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
 		ifconfig $j.$SLICEVLAN $interface_ip netmask $interface_netmask
-		ip r d 192.168.0.0/16 dev $j.$SLICEVLAN 
 		ii=$((ii+1))
 	done
 
@@ -134,8 +133,6 @@ create_vxlan_bridge () {
 		ovs-vsctl add-br $TUNL_BRIDGE-$j
 		ovs-vsctl add-port  $TUNL_BRIDGE-$j ${INTERFACES[$ii]}.$SLICEVLAN
 		ifconfig $TUNL_BRIDGE-$j $interface_ip netmask $interface_netmask
-	#	ifconfig $TUNL_BRIDGE-$i 0
-		ip r d 192.168.0.0/16 dev $TUNL_BRIDGE-$j 
 		ii=$((ii+1))
 	done
 

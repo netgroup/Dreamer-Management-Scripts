@@ -230,12 +230,14 @@ for (( i=0; i<${#INTERFACES[@]}; i++ )); do
 done
 for i in ${VI[@]}; do
         eval QUAGGAIP=\${${i}[0]}
-        CURRENTNET=$(ipcalc $QUAGGAIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-        if [ $CURRENTNET == $MGMTNETWORK ]
-                then
-                        echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-                        EXIT_ERROR=-1
-                        exit $EXIT_ERROR
+		if [ "$QUAGGAIP" != "0.0.0.0/32" ]; then
+                CURRENTNET=$(ipcalc $QUAGGAIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
+                if [ $CURRENTNET == $MGMTNETWORK ]
+                        then
+                                echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
+                                EXIT_ERROR=-1
+                                exit $EXIT_ERROR
+                fi
         fi
 done
 

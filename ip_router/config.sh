@@ -22,7 +22,7 @@ plain_ip_router_vxlan_2 () {
 	echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE"
 	
 	for i in ${TAP[@]}; do
-		eval remoteport=\${${i}[1]}
+		eval remoteport=\${${i}[0]}
 		eval remoteaddr=\${!$i[2]}
 		# ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
 		ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport

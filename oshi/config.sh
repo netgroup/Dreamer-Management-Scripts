@@ -50,7 +50,7 @@ oshi () {
 
 		echo -e "\n-Adding interfaces to bridge $BRIDGENAME"
 		for i in ${TAP[@]}; do
-    		eval remoteport=\${${i}[1]}  #cambiare con nuovo array tap
+    		eval remoteport=\${${i}[0]}  #cambiare con nuovo array tap
 			eval remoteaddr=\${!$i[1]}
 			#ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=flow options:dst_port=$remoteport
 			ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport

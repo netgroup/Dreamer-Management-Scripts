@@ -149,6 +149,7 @@ done
 echo -e "\n-Removing loopback address"
 ip addr del $(ip a | grep "scope global lo" | awk '{split($0,a," "); print a[2]}') dev lo &&
 
+# si puo togliere?
 echo -e "\n-Cleaning up physical interfaces configuration"
 # deleting lines related to the interfaces involved in /etc/network/interfaces
 sed -i -e '/auto eth[^0]/,/\n/d' /etc/network/interfaces &&
@@ -156,7 +157,7 @@ sed -i -e '/^$/d' /etc/network/interfaces &&
 
 echo -e "\n-Restarting network services"
 /etc/init.d/networking restart &&
-
+#
 echo -e "\n\nDREAMER IP/SDN hybrid node configuration cleaning ended succesfully. Enjoy!\n"
 
 EXIT_SUCCESS=0

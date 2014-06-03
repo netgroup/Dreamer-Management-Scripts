@@ -44,7 +44,7 @@ oshi () {
 	if [ "$TUNNELING" = "VXLAN" ];then
 		
 		if [ "$OSHI_VXLAN_TYPE" = "one_bridge" ];then
-			create_vxlan_interfaces
+			setup_interfaces
 		elif [ "$OSHI_VXLAN_TYPE" = "two_bridge" ];then
 			create_vxlan_bridge
 		fi
@@ -89,7 +89,7 @@ oshi () {
 
 }
 
-create_vxlan_interfaces () {
+setup_interfaces () {
 
 	ii=0
 	for j in ${INTERFACES[@]}; do
@@ -105,7 +105,11 @@ create_vxlan_interfaces () {
 	# set static routes
     declare -a ENDIPS
     for i in ${TAP[@]}; do
-            eval ELEMENT=\${${i}[1]} # cambiare con nuovo array tap
+    		if [ "$TUNNELING" = "OpenVPN" ]; then
+    			eval ELEMENT=\${${i}[2]}
+    		else
+            	eval ELEMENT=\${${i}[1]} 
+            fi
             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
             fi
@@ -139,7 +143,7 @@ create_vxlan_bridge () {
 	# set static routes
     declare -a ENDIPS
     for i in ${TAP[@]}; do
-            eval ELEMENT=\${${i}[1]} # cambiare con nuovo array tap
+
             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
             fi
@@ -241,53 +245,56 @@ fi
 if [ "$TUNNELING" = "OpenVPN" ]; then
 
 echo -e "\n-Setting up physical interfaces"
-# deleting white spaces in /etc/network/interfaces
-sed -i -e '/^$/d' /etc/network/interfaces &&
-# deleting lines related to the interfaces involved in /etc/network/interfaces
-for i in ${INTERFACES[@]}; do
-	sed -i '/'$i'/d' /etc/network/interfaces
-done
-# adding configuration for interfaces into /etc/network/interfaces
-for i in ${INTERFACES[@]}; do
-echo "
-auto ${i}
-iface ${i} inet manual
-up ifconfig ${i} up" >> /etc/network/interfaces
-done
+setup_interfaces
+# # deleting white spaces in /etc/network/interfaces
+# sed -i -e '/^$/d' /etc/network/interfaces &&
+# # deleting lines related to the interfaces involved in /etc/network/interfaces
+# for i in ${INTERFACES[@]}; do
+# 	sed -i '/'$i'/d' /etc/network/interfaces
+# done
+# # adding configuration for interfaces into /etc/network/interfaces
+# for i in ${INTERFACES[@]}; do
+# echo "
+# auto ${i}
+# iface ${i} inet manual
+# up ifconfig ${i} up" >> /etc/network/interfaces
+# done
 
-# adding configuration for vlan interfaces into /etc/network/interfaces
-echo -e "\n-Setting VLAN ${slicevlan} on interfaces"
-for (( i=0; i<${#INTERFACES[@]}; i++ )); do
-	eval addr=\${${INTERFACES[$i]}[0]}
-	eval netmask=\${${INTERFACES[$i]}[1]}
-	echo "
-auto ${INTERFACES[$i]}.$SLICEVLAN
-iface ${INTERFACES[$i]}.$SLICEVLAN inet static
-address $addr
-netmask $netmask">> /etc/network/interfaces
-done
+# # adding configuration for vlan interfaces into /etc/network/interfaces
+# echo -e "\n-Setting VLAN ${slicevlan} on interfaces"
+# for (( i=0; i<${#INTERFACES[@]}; i++ )); do
+# 	eval addr=\${${INTERFACES[$i]}[0]}
+# 	eval netmask=\${${INTERFACES[$i]}[1]}
+# 	echo "
+# auto ${INTERFACES[$i]}.$SLICEVLAN
+# iface ${INTERFACES[$i]}.$SLICEVLAN inet static
+# address $addr
+# netmask $netmask">> /etc/network/interfaces
+# done
 
-echo -e "\n-Setting static routes"
-declare -a ENDIPS
-for i in ${TAP[@]}; do
-	eval ELEMENT=\${${i}[2]}
-	if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ]
-		then
-			ENDIPS[${#ENDIPS[@]}]=$ELEMENT
-	fi
-done
-for (( i=0; i<${#ENDIPS[@]}; i++ )); do
-	eval remoteaddr=\${${ENDIPS[$i]}[0]}
-	eval interface=\${${ENDIPS[$i]}[1]}
-	sed -i "/iface $interface.$SLICEVLAN inet static/a\
-up route add -host $remoteaddr dev $interface.$SLICEVLAN
-" /etc/network/interfaces
-done
+# echo -e "\n-Setting static routes"
+# declare -a ENDIPS
+# for i in ${TAP[@]}; do
+# 	eval ELEMENT=\${${i}[2]}
+# 	if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ]
+# 		then
+# 			ENDIPS[${#ENDIPS[@]}]=$ELEMENT
+# 	fi
+# done
+# for (( i=0; i<${#ENDIPS[@]}; i++ )); do
+# 	eval remoteaddr=\${${ENDIPS[$i]}[0]}
+# 	eval interface=\${${ENDIPS[$i]}[1]}
+# 	sed -i "/iface $interface.$SLICEVLAN inet static/a\
+# up route add -host $remoteaddr dev $interface.$SLICEVLAN
+# " /etc/network/interfaces
+# done
 
-echo -e "\n-Restarting network services"
-/etc/init.d/networking restart 
+# echo -e "\n-Restarting network services"
+# /etc/init.d/networking restart 
 
 fi
+
+
 
 if [ $(ps aux | grep avahi-daemon | wc -l) -gt 1 ]; then
 	/etc/init.d/avahi-daemon stop

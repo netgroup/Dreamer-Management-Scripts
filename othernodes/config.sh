@@ -17,7 +17,7 @@ plain_node_vxlan2 () {
         
         ii=0
         
-        create_vxlan_interfaces
+        # setup_interfaces
         ovs-vsctl add-br $TUNL_BRIDGE
         echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE"
         
@@ -61,7 +61,7 @@ plain_node_vxlan2 () {
         ii=$((ii+1))
 }
 
-create_vxlan_interfaces () {
+setup_interfaces () {
         ii=0
         for j in ${INTERFACES[@]}; do
                 echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE"
@@ -73,14 +73,16 @@ create_vxlan_interfaces () {
                 vconfig add ${INTERFACES[$ii]} $SLICEVLAN
                 ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
                 ifconfig $j.$SLICEVLAN $interface_ip netmask $interface_netmask
-                #ip r d 192.168.0.0/16 dev $j.$SLICEVLAN  # perche la cancellavo?                
                 ii=$((ii+1))
         done
         # set static routes
     declare -a ENDIPS
     for i in ${TAP[@]}; do
-            eval ELEMENT=\${${i}[1]} # cambiare con nuovo array tap
-	    echo $ELEMENT
+            if [ "$TUNNELING" = "OpenVPN" ]; then
+                eval ELEMENT=\${${i}[3]}
+            else
+                eval ELEMENT=\${${i}[1]} # cambiare con nuovo array tap
+	        fi
             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
             fi
@@ -278,54 +280,56 @@ fi
 #     fi
 # fi
 
-if [ "$TUNNELING" = "OpenVPN" ]; then
+# if [ "$TUNNELING" = "OpenVPN" ]; then
 
-echo -e "\n-Setting up physical interfaces"
-# deleting white spaces in /etc/network/interfaces
-sed -i -e '/^$/d' /etc/network/interfaces &&
-# deleting lines related to the interfaces involved in /etc/network/interfaces
-sed -i -e 's/auto eth[^0]//g' /etc/network/interfaces &&
-# adding configuration for interfaces into /etc/network/interfaces
-for i in ${INTERFACES[@]}; do
-echo "
-auto ${i}
-iface ${i} inet manual
-up ifconfig ${i} up" >> /etc/network/interfaces
-done
+# echo -e "\n-Setting up physical interfaces"
+# # deleting white spaces in /etc/network/interfaces
+# sed -i -e '/^$/d' /etc/network/interfaces &&
+# # deleting lines related to the interfaces involved in /etc/network/interfaces
+# sed -i -e 's/auto eth[^0]//g' /etc/network/interfaces &&
+# # adding configuration for interfaces into /etc/network/interfaces
+# for i in ${INTERFACES[@]}; do
+# echo "
+# auto ${i}
+# iface ${i} inet manual
+# up ifconfig ${i} up" >> /etc/network/interfaces
+# done
 
-# adding configuration for vlan interfaces into /etc/network/interfaces
-echo -e "\n-Setting VLAN ${slicevlan} on interfaces"
-for (( i=0; i<${#INTERFACES[@]}; i++ )); do
-	eval addr=\${${INTERFACES[$i]}[0]}
-	eval netmask=\${${INTERFACES[$i]}[1]}
-	echo "
-auto ${INTERFACES[$i]}.$SLICEVLAN
-iface ${INTERFACES[$i]}.$SLICEVLAN inet static
-address $addr
-netmask $netmask">> /etc/network/interfaces
-done
+# # adding configuration for vlan interfaces into /etc/network/interfaces
+# echo -e "\n-Setting VLAN ${slicevlan} on interfaces"
+# for (( i=0; i<${#INTERFACES[@]}; i++ )); do
+# 	eval addr=\${${INTERFACES[$i]}[0]}
+# 	eval netmask=\${${INTERFACES[$i]}[1]}
+# 	echo "
+# auto ${INTERFACES[$i]}.$SLICEVLAN
+# iface ${INTERFACES[$i]}.$SLICEVLAN inet static
+# address $addr
+# netmask $netmask">> /etc/network/interfaces
+# done
 
-echo -e "\n-Setting static routes"
-declare -a ENDIPS
-for i in ${TAP[@]}; do
-	eval ELEMENT=\${${i}[3]}
-	if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ]
-		then
-			ENDIPS[${#ENDIPS[@]}]=$ELEMENT
-	fi
-done
-for (( i=0; i<${#ENDIPS[@]}; i++ )); do
-	eval remoteaddr=\${${ENDIPS[$i]}[0]}
-	eval interface=\${${ENDIPS[$i]}[1]}
-	sed -i "/iface $interface.$SLICEVLAN inet static/a\
-up route add -host $remoteaddr dev $interface.$SLICEVLAN
-" /etc/network/interfaces
-done
+# echo -e "\n-Setting static routes"
+# declare -a ENDIPS
+# for i in ${TAP[@]}; do
+# 	eval ELEMENT=\${${i}[3]}
+# 	if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ]
+# 		then
+# 			ENDIPS[${#ENDIPS[@]}]=$ELEMENT
+# 	fi
+# done
+# for (( i=0; i<${#ENDIPS[@]}; i++ )); do
+# 	eval remoteaddr=\${${ENDIPS[$i]}[0]}
+# 	eval interface=\${${ENDIPS[$i]}[1]}
+# 	sed -i "/iface $interface.$SLICEVLAN inet static/a\
+# up route add -host $remoteaddr dev $interface.$SLICEVLAN
+# " /etc/network/interfaces
+# done
 
-echo -e "\n-Restarting network services"
-/etc/init.d/networking restart 
+# echo -e "\n-Restarting network services"
+# /etc/init.d/networking restart 
 
-fi
+# fi
+
+setup_interfaces
 
 service avahi-daemon stop &&
 

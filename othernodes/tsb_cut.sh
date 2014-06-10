@@ -1,7 +1,7 @@
 #!/bin/bash
 rm testbed.sh
 
-wget https://www.dropbox.com/s/jj7cvi77xwjn8dp/testbed.sh
+wget https://www.dropbox.com/s/smsyctn1qj72kpk/testbed.sh
 
 MANAGMENT_IP=$( ip -4 addr show dev eth0 | grep -m 1 "inet " | awk '{print $2}' | cut -d "/" -f 1 )
 

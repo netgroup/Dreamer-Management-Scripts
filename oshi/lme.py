@@ -37,16 +37,19 @@ def translate_rule(rule):
 	#test if rule has output_port
 	if 'output' in rule and not re.search(out_port, rule):
 		print "output: not followed by comma, retry.."
-		out_port = re.compile('output:(.*?)(\Z)')
-		out_port_end = ""
+		out_port = re.compile('output:(.*?)\"(\Z)')
+		out_port_end = "\""
 		if not re.search(out_port, rule):
 			print "Error Wrong Output Port"
 			sys.exit(-2)
+		out_if_name = out_port.search(rule).group(1)
+		out_if_index = get_if_index(out_if_name)	
+		rule = re.sub(out_port, "output:"+out_if_index+out_port_end, rule)
 	elif 'out_port' not in rule:
 		print "Out Port Not Exists"
 	else:	
 		out_if_name = out_port.search(rule).group(1)
-		out_if_index = get_if_index(out_if_name)	
+		out_if_index = get_if_index(out_if_name)
 		rule = re.sub(out_port, "output:"+out_if_index+out_port_end, rule)
 
 	return rule
@@ -61,7 +64,7 @@ def push_rules():
 	for line in lines:
 		if "start" not in line and "end" not in line:
 			rule = line[:-1]
-			translate_rule(rule)
+			rule = translate_rule(rule)
 			add_flow(rule)
 			
 

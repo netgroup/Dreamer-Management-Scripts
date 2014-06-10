@@ -19,5 +19,5 @@ wget https://www.dropbox.com/s/vp30krz8vamjoxn/lmerules.sh
 START_END=( $(grep -F "$MANAGMENT_IP" lmerules.sh -n | cut -d ":" -f 1) )
 sed "${START_END[0]},${START_END[1]}!d" lmerules.sh >> rules.sh
 
-mv rules lmerules.sh
+mv rules.sh lmerules.sh
 

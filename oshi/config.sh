@@ -69,23 +69,24 @@ oshi () {
 	done
 	
 	echo -e "\n-Creating static rules on OpenVSwitch"
-	declare -a ofporttap &&
-	declare -a ofportVI &&
+	lme.py
+	#declare -a ofporttap &&
+	#declare -a ofportVI &&
 
-	for i in ${TAP[@]}; do
-	    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-	done
-
-	for i in ${VI[@]}; do
-		OFPORTSVI[${#OFPORTSVI[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-	done
-	for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
-	        ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSVI[$i]}
-	        ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=300,in_port=${OFPORTSVI[$i]},action=output:${OFPORTSTAP[$i]}
-	done
-
-	ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=301,dl_type=0x88cc,action=controller 
-	ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=301,dl_type=0x8942,action=controller 
+	#for i in ${TAP[@]}; do
+	#    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+	#done
+	#
+	#for i in ${VI[@]}; do
+	#	OFPORTSVI[${#OFPORTSVI[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
+	#done
+	#for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
+	#        ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSVI[$i]}
+	#        ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=300,in_port=${OFPORTSVI[$i]},action=output:${OFPORTSTAP[$i]}
+	#done
+	#
+	#ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=301,dl_type=0x88cc,action=controller 
+	#ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=301,dl_type=0x8942,action=controller 
 
 }
 

@@ -1,0 +1,18 @@
+#!/usr/bin/expect
+ 
+#Usage send_root_cmd <host> <ssh user> <ssh password> <su password> <su command>
+ 
+set timeout 10
+ 
+spawn ssh [lindex $argv 1]@[lindex $argv 0]
+ 
+expect "yes/no" { 
+    send "yes\r"
+    expect "*?assword" { send "[lindex $argv 2]\r" }
+    } "*?assword" { send "[lindex $argv 2]\r" }
+
+expect "$ " { send "su\r" }
+expect ": " { send "[lindex $argv 3]\r" } "# " { send "\r" }
+expect "# " { send "[lindex $argv 4]\r"}
+expect "#"
+# # interact

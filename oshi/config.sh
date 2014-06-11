@@ -69,7 +69,7 @@ oshi () {
 	done
 	
 	echo -e "\n-Creating static rules on OpenVSwitch"
-	lme.py
+	python lme.py
 	#declare -a ofporttap &&
 	#declare -a ofportVI &&
 
@@ -350,10 +350,23 @@ ip address $LOOPBACK
 link-detect" > /etc/quagga/zebra.conf &&
 for i in ${VI[@]}; do
 eval VIaddr=\${${i}[0]}
+
+if [ "${COEX[0]}" = "COEXA" ];then
+
+echo -e "
+interface ${i}.${COEX[1]}
+ip address $VIaddr
+link-detect" >> /etc/quagga/zebra.conf
+
+else
+
 echo -e "
 interface ${i}
 ip address $VIaddr
 link-detect" >> /etc/quagga/zebra.conf
+
+fi
+
 done
 
 # OSPFD.CONF
@@ -368,10 +381,23 @@ ospf hello-interval ${LOOPBACK[2]}\n" > /etc/quagga/ospfd.conf &&
 for i in ${VI[@]}; do
 eval quaggaospfcost=\${${i}[1]}
 eval quaggahellointerval=\${${i}[2]}
+
+if [ "${COEX[0]}" = "COEXA" ];then
+
+echo -e "interface $i.${COEX[1]}
+ospf cost $quaggaospfcost
+ospf hello-interval $quaggahellointerval\n" >> /etc/quagga/ospfd.conf
+
+else
+
 echo -e "interface $i
 ospf cost $quaggaospfcost
 ospf hello-interval $quaggahellointerval\n" >> /etc/quagga/ospfd.conf
+
+fi
+
 done
+
 echo -e "router ospf\n" >> /etc/quagga/ospfd.conf
 for i in ${OSPFNET[@]}; do
 	eval quaggaannouncednet=\${${i}[0]}
@@ -416,6 +442,20 @@ echo -e "\n-Starting Quagga daemon"
 echo -e "\n-Configuring OpenVSwitch"
 
 oshi
+
+if [ "${COEX[0]}" = "COEXA" ];then
+
+echo -e "\nCOEXA...Setting UP vi.${COEX[1]} interface"
+
+for i in ${VI[@]}; do
+
+ip link set ${i} up
+vconfig add ${i} ${COEX[1]} 1> /dev/null
+ip link set ${i}.${COEX[1]} up 2> /dev/null
+
+done
+
+fi
 
 # Appending rules to reconfig OVS port associations when the service start, to the service file /etc/init.d/openvswitchd
 echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"

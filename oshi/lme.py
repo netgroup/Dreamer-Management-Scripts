@@ -27,9 +27,7 @@ def translate_rule(rule):
 	if 'in_port' in rule and not re.search(in_port, rule):
 		print "Error Wrong In Port"
 		sys.exit(-2)	
-	elif 'in_port' not in rule:
-		print "In Port Non Exists"
-	else:
+	elif 'in_port' in rule and re.search(in_port, rule):
 		in_if_name = in_port.search(rule).group(1)
 		in_if_index = get_if_index(in_if_name)
 		rule = re.sub(in_port, "in_port="+in_if_index+",", rule)
@@ -45,9 +43,7 @@ def translate_rule(rule):
 		out_if_name = out_port.search(rule).group(1)
 		out_if_index = get_if_index(out_if_name)	
 		rule = re.sub(out_port, "output:"+out_if_index+out_port_end, rule)
-	elif 'out_port' not in rule:
-		print "Out Port Not Exists"
-	else:	
+	elif 'output' in rule and re.search(out_port, rule):	
 		out_if_name = out_port.search(rule).group(1)
 		out_if_index = get_if_index(out_if_name)
 		rule = re.sub(out_port, "output:"+out_if_index+out_port_end, rule)

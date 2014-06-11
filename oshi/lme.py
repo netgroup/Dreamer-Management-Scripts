@@ -34,7 +34,7 @@ def translate_rule(rule):
 
 	#test if rule has output_port
 	if 'output' in rule and not re.search(out_port, rule):
-		print "output: not followed by comma, retry.."
+		#print "output: not followed by comma, retry.."
 		out_port = re.compile('output:(.*?)\"(\Z)')
 		out_port_end = "\""
 		if not re.search(out_port, rule):

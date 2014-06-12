@@ -259,13 +259,13 @@ if [ -f $DIR/clean-config.sh ];
 		echo -e "\n---> WARNING: clean-config.sh file is not present. We suggest to copy the original file manually to /etc/dreamer"
 fi
 # Copying reconfig-device.sh file if present
-if [ -f $DIR/reconfig-device.sh ];
-	then
-		echo -e "\n---> Copying reconfig-device.sh to /etc/dreamer"
-		cp $DIR/reconfig-device.sh /etc/dreamer/reconfig-device.sh
-	else
-		echo -e "\n---> WARNING: reconfig-device.sh file is not present. We suggest to copy the original file manually to /etc/dreamer"
-fi
+#if [ -f $DIR/reconfig-device.sh ];
+#	then
+#		echo -e "\n---> Copying reconfig-device.sh to /etc/dreamer"
+#		cp $DIR/reconfig-device.sh /etc/dreamer/reconfig-device.sh
+#	else
+#		echo -e "\n---> WARNING: reconfig-device.sh file is not present. We suggest to copy the original file manually to /etc/dreamer"
+#fi
 
 echo -e "\n\nDREAMER IP/SDN hybrid node (OSHI) setup ended succesfully. Enjoy!\n"
 

@@ -458,9 +458,9 @@ done
 fi
 
 # Appending rules to reconfig OVS port associations when the service start, to the service file /etc/init.d/openvswitchd
-echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"
-sed -i '72a\
-bash /etc/dreamer/reconfig-device.sh' /etc/init.d/openvswitchd
+#echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"
+#sed -i '72a\
+#bash /etc/dreamer/reconfig-device.sh' /etc/init.d/openvswitchd
 
 echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
 echo -e "cd /etc/dreamer" >> /root/.bashrc

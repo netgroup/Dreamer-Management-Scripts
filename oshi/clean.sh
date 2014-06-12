@@ -13,8 +13,8 @@ echo "#############################################################"
 sed -i -e 's/cd \/etc\/dreamer//g' /root/.bashrc &&
 
 # Removing DREAMER load at startup from OVS
-echo -e "\n-Removing DREAMER load at startup from OVS"
-sed -i -e '/bash \/etc\/dreamer\/reconfig-device.sh/,+0d' /etc/init.d/openvswitchd &&
+#echo -e "\n-Removing DREAMER load at startup from OVS"
+#sed -i -e '/bash \/etc\/dreamer\/reconfig-device.sh/,+0d' /etc/init.d/openvswitchd &&
 
 # Reset of OpenVSwitch
 for i in $(ovs-vsctl list-br); do

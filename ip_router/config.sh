@@ -451,9 +451,9 @@ if [ "$TUNNELING" = "VXLAN" ];then
 	echo -e "\n-Configuring OpenVSwitch"
 	plain_ip_router_vxlan_2
 	# Appending rules to reconfig OVS port associations when the service start, to the service file /etc/init.d/openvswitchd
-	echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"
-	sed -i '72a\
-	bash /etc/dreamer/reconfig-device.sh' /etc/init.d/openvswitchd
+	#echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"
+	#sed -i '72a\
+	#bash /etc/dreamer/reconfig-device.sh' /etc/init.d/openvswitchd
 
 fi
 

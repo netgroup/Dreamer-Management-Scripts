@@ -9,7 +9,7 @@
 #	clean : clean all nodes
 #	all : complete setup and config
 #	update_mgmt_sh : update the configuration file management.sh
-#	
+#	change_sh_addresses : update remote.cfg on the machines
 
 USER="root"
 
@@ -153,7 +153,7 @@ for i in ${DSH_GROUPS[@]}; do
 				REPLACEMENT_VALUE="$TESTBED_SH_ADDR"
 				TARGET_KEY2="DREAMERCONFIGSERVER2"
 				REPLACEMENT_VALUE2="$LMERULES_SH_ADDR"
-				dsh -M -g $i -c "cd ./$REPO_DIR/oshi/ && sed -i \"s/\($TARGET_KEY *= *\).*/\1$REPLACEMENT_VALUE/\" ./remote.cfg  && sed -i \"s/\($TARGET_KEY2 *= *\).*/\1$REPLACEMENT_VALUE2/\" ./remote.cfg"
+				dsh -M -g $i -c "cd ./$REPO_DIR/oshi/ && sed -i \"s@\($TARGET_KEY *= *\).*@\1$REPLACEMENT_VALUE@\" ./remote.cfg  && sed -i \"s@\($TARGET_KEY2 *= *\).*@\1$REPLACEMENT_VALUE2@\" ./remote.cfg"
         elif [ "$i" = "ROUTER" ];then
                 echo $i
 				if ! [ -n "$TESTBED_SH_ADDR" ]; then
@@ -162,7 +162,7 @@ for i in ${DSH_GROUPS[@]}; do
 				fi
 				TARGET_KEY="DREAMERCONFIGSERVER"
 				REPLACEMENT_VALUE="$TESTBED_SH_ADDR"
-				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && sed -i \"s/\($TARGET_KEY *= *\).*/\1$REPLACEMENT_VALUE/\" ./remote.cfg"
+				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && sed -i \"s@\($TARGET_KEY *= *\).*@\1$REPLACEMENT_VALUE@\" ./remote.cfg"
         elif [ "$i" = "EUH" ] || [ "$i" = "CTRL" ];then
 				echo $i
 				if ! [ -n "$TESTBED_SH_ADDR" ]; then
@@ -171,7 +171,7 @@ for i in ${DSH_GROUPS[@]}; do
 				fi
 				TARGET_KEY="DREAMERCONFIGSERVER"
 				REPLACEMENT_VALUE="$TESTBED_SH_ADDR"
-				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && sed -i \"s/\($TARGET_KEY *= *\).*/\1$REPLACEMENT_VALUE/\" ./remote.cfg"
+				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && sed -i \"s@\($TARGET_KEY *= *\).*@\1$REPLACEMENT_VALUE@\" ./remote.cfg"
 		else    
             	#Not Handled
 				echo "$i Not Handled"

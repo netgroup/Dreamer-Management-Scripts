@@ -9,6 +9,7 @@
 #	clean : clean all nodes
 #	all : complete setup and config
 #	update_mgmt_sh : update the configuration file management.sh
+#	
 
 USER="root"
 
@@ -18,6 +19,10 @@ MGT_SH_ADDR=https://www.dropbox.com/s/f5lse4stkxrwb6j/management.sh
 #TODO : recuperare dal file ()
 
 update_mgmt_sh(){
+	if ! [ -n "$MGT_SH_ADDR" ]; then
+		echo "MGT_SH_ADDR Not Setted"
+		exit 1
+	fi
 	echo "Updating management.sh from $MGT_SH_ADDR..."
 	wget $MGT_SH_ADDR
 }
@@ -100,6 +105,9 @@ WORK_DIR=/root/
 REPO_DIR=dreamer-setup-scripts
 REPO_URL=https://github.com/netgroup/Dreamer-Setup-Scripts
 
+TESTBED_SH_ADDR="https://www.dropbox.com/s/smsyctn1qj72kpk/testbed.sh"
+LMERULES_SH_ADDR="https://www.dropbox.com/s/vp30krz8vamjoxn/lmerules.sh"
+
 clone_dreamer(){
 #Install DREAMER installation and management scripts
 #git clone su tutti i nodi della lista NODE_LIST
@@ -113,16 +121,61 @@ for_all_group() {
 for i in ${DSH_GROUPS[@]}; do
         if [ "$i" = "OSHI" ]; then
                 #Install OSHI nodes
-		echo $i
+				echo $i
                 dsh -M -g $i -c "cd ./$REPO_DIR/oshi/ && ./$1" 
-        elif [ "$i" = "IP_ROUTER" ];then
+        elif [ "$i" = "ROUTER" ];then
                 #Install IP_ROUTER nodes
                 echo $i
-		dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && ./$1"  
-        else    
-		echo $i
-                #Install other machines
+				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && ./$1"  
+        elif [ "$i" = "EUH" ] || [ "$i" = "CTRL" ];then
+				#Install other machines
+				echo $i
                 dsh -M -g $i -c "cd ./$REPO_DIR/othernodes/ && ./$1" 
+		else    
+            	#Not Handled
+				echo "$i Not Handled"
+				exit 1 			 
+        fi
+done
+
+}
+
+change_sh_addresses(){
+
+for i in ${DSH_GROUPS[@]}; do
+        if [ "$i" = "OSHI" ]; then
+				echo $i
+				if ! [ -n "$TESTBED_SH_ADDR" ] || ! [ -n "$LMERULES_SH_ADDR" ]; then
+					echo "Addresses Not Setted For OSHI"
+					exit 1
+				fi
+				TARGET_KEY="DREAMERCONFIGSERVER"
+				REPLACEMENT_VALUE="$TESTBED_SH_ADDR"
+				TARGET_KEY2="DREAMERCONFIGSERVER2"
+				REPLACEMENT_VALUE2="$LMERULES_SH_ADDR"
+				dsh -M -g $i -c "cd ./$REPO_DIR/oshi/ && sed -i \"s/\($TARGET_KEY *= *\).*/\1$REPLACEMENT_VALUE/\" ./remote.cfg  && sed -i \"s/\($TARGET_KEY2 *= *\).*/\1$REPLACEMENT_VALUE2/\" ./remote.cfg"
+        elif [ "$i" = "ROUTER" ];then
+                echo $i
+				if ! [ -n "$TESTBED_SH_ADDR" ]; then
+					echo "Addresses Not Setted For ROUTER"
+					exit 1
+				fi
+				TARGET_KEY="DREAMERCONFIGSERVER"
+				REPLACEMENT_VALUE="$TESTBED_SH_ADDR"
+				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && sed -i \"s/\($TARGET_KEY *= *\).*/\1$REPLACEMENT_VALUE/\" ./remote.cfg"
+        elif [ "$i" = "EUH" ] || [ "$i" = "CTRL" ];then
+				echo $i
+				if ! [ -n "$TESTBED_SH_ADDR" ]; then
+					echo "Addresses Not Setted For EUH and CTRL"
+					exit 1
+				fi
+				TARGET_KEY="DREAMERCONFIGSERVER"
+				REPLACEMENT_VALUE="$TESTBED_SH_ADDR"
+				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && sed -i \"s/\($TARGET_KEY *= *\).*/\1$REPLACEMENT_VALUE/\" ./remote.cfg"
+		else    
+            	#Not Handled
+				echo "$i Not Handled"
+				exit 1 			 
         fi
 done
 
@@ -169,7 +222,7 @@ if [ -f management.sh ];
 elif [ "$1" != "update_mgmt_sh" ];
 	then
 		echo "Error File Not Found..."
-		exit 1
+		exit -1
 fi
 
 $1

@@ -8,15 +8,19 @@
 #	config : configure all nodes
 #	clean : clean all nodes
 #	all : complete setup and config
+#	update_mgmt_sh : update the configuration file management.sh
 
 USER="root"
 
-#TODO : recuperare dal file ()
-declare -a DSH_GROUPS=(OSHI EUH)
-declare -a OSHI=(10.216.33.150 10.216.33.135) 
-declare -a EUH=(10.216.33.135)
-declare -a NODE_LIST=(10.216.33.135 10.216.33.150) # al max la si deriva dall'unione di tutti i gruppi
+#XXX Address used for the download of management.sh
+MGT_SH_ADDR=https://www.dropbox.com/s/f5lse4stkxrwb6j/management.sh
 
+#TODO : recuperare dal file ()
+
+update_mgmt_sh(){
+	echo "Updating management.sh from $MGT_SH_ADDR..."
+	wget $MGT_SH_ADDR
+}
 
 config_dsh(){
 
@@ -156,5 +160,16 @@ config_dsh
 setup
 config
 }
+
+if [ -f management.sh ];
+	then
+		# If cfg file is present in current folder, use it
+		echo "---> File found in current folder. Using local configuration file management.sh"
+		source management.sh
+elif [ "$1" != "update_mgmt_sh" ];
+	then
+		echo "Error File Not Found..."
+		exit 1
+fi
 
 $1

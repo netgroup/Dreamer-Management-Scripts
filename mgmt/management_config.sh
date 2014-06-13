@@ -174,7 +174,7 @@ for i in ${DSH_GROUPS[@]}; do
 				fi
 				TARGET_KEY="DREAMERCONFIGSERVER"
 				REPLACEMENT_VALUE="$TESTBED_SH_ADDR"
-				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && sed -i \"s@\($TARGET_KEY *= *\).*@\1$REPLACEMENT_VALUE@\" ./remote.cfg"
+				dsh -M -g $i -c "cd ./$REPO_DIR/othernodes/ && sed -i \"s@\($TARGET_KEY *= *\).*@\1$REPLACEMENT_VALUE@\" ./remote.cfg"
 		else    
             	#Not Handled
 				echo "$i Not Handled"

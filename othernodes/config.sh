@@ -90,7 +90,7 @@ setup_interfaces () {
     for (( i=0; i<${#ENDIPS[@]}; i++ )); do
             eval remoteaddr=\${${ENDIPS[$i]}[0]}
             eval interface=\${${ENDIPS[$i]}[1]}
-	    echo  $remoteaddr
+	    #echo  $remoteaddr
             ip r a $remoteaddr dev $interface.$SLICEVLAN 
     done
 }
@@ -179,50 +179,14 @@ if [ -f testbed.sh ];
 		source testbed.sh
 	else
 		# If cfg file is not present in current folder, try to look into /etc/dreamer
-		echo -e "--> Local configuration file not found in $(pwd).\n---> Looking for configuration file in /etc/dreamer..."
-		if [ -f /etc/dreamer/testbed.sh ];
-			then
-				# If file is present in /etc/dreamer use it
-				echo "---> File found in /etc/dreamer. Using local configuration file testbed.sh"
-				source /etc/dreamer/testbed.sh
-			else
-				# If file is not present both in current directory and into /etc/dreamer, try to look for a remote.cfg file in current directory and read from
-				# it the variable dreamerconfigserver (link to the file on internet - http)
-				echo -e "--> Local configuration file not found in /etc/dreamer.\n---> Looking online for an updated configuration file. Looking for a remote.cfg file in current directory ($(pwd))..."
-				if [ -f /etc/dreamer/remote.cfg ];
-					then
-						echo -e "\n---> remote.cfg file found in /etc/dreamer. Trying to read the file... "
-						source /etc/dreamer/remote.cfg
-						if [ -n $DREAMERCONFIGSERVER ];
-							then
-								echo -e "---> DREAMERCONFIGSERVER variable found in remote.cfg. Trying to download the configuration file from $DREAMERCONFIGSERVER"
-								wget $DREAMERCONFIGSERVER 2> /dev/null
-								if [ -f testbed.sh  ];
-									then
-										# Get the management IP address (IPv4 set on eth0)
-										MNGMTADDR=$(ifconfig eth0 | grep -e "inet addr" | awk '{split($0,a," "); print a[2]}' | awk '{split($0,a,":"); print a[2]}')
-										wget -O- -q $DREAMERCONFIGSERVER | awk ' /'"# $MNGMTADDR - start"'/ {flag=1;next} /'"# $MNGMTADDR - end"'/{flag=0} flag { print }' /dev/stdin > /etc/dreamer/testbed.sh
-										source testbed.sh
-										echo "---> Configuration file downloaded in /etc/dreamer."
-									else
-										echo "---> ERROR: No configuration files found at $DREAMERCONFIGSERVER. Try to upload the file again and make sure that the path is still available."
-										EXIT_ERROR=-1
-										exit $EXIT_ERROR
-								fi
-							else
-								echo -e "---> ERROR: DREAMERCONFIGSERVER variable not found in remote.cfg file or value not correct. Please, try to correct the value."
-								EXIT_ERROR=-1
-								exit $EXIT_ERROR
-						fi
-					else
-						echo -e "\n---> ERROR: remote.cfg file not found in /etc/draemer."
-						echo -e "\n\n---> ERROR: no configuration files found. Please set either a local or a remote configuration file before starting."
-						EXIT_ERROR=-1
-                        exit $EXIT_ERROR
-				fi
+		echo -e "--> Local configuration file not found in $(pwd).\n---> Downloading from Server address contained in remote.cfg..."
+		./update_cfg.sh
+		if ! [ -f testbed.sh ]; then
+			echo -e "--> Update Failed...Check address in remote.cfg"
+			exit 1
 		fi
+		source testbed.sh
 fi
-
 
 # if [ "$TESTBED" = "OFELIA" ]; then
 

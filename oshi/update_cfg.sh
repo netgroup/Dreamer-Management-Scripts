@@ -2,7 +2,17 @@
 rm testbed.sh
 rm lmerules.sh
 
-wget https://www.dropbox.com/s/smsyctn1qj72kpk/testbed.sh
+if ! [ -f remote.cfg ]; then
+	echo -e "remote.cfg not found...exit"
+	exit 1
+fi
+
+if ! [ -n "$DREAMERCONFIGSERVER" ] || ! [ -n "$DREAMERCONFIGSERVER2" ]; then
+	echo "Addresses Not Setted For OSHI...exit"
+	exit 1
+fi
+
+wget $DREAMERCONFIGSERVER
 
 MANAGMENT_IP=$( ip -4 addr show dev eth0 | grep -m 1 "inet " | awk '{print $2}' | cut -d "/" -f 1 )
 
@@ -14,7 +24,7 @@ sed "${START_END[0]},${START_END[1]}!d" testbed.sh >> tbs.sh
 
 mv tbs.sh testbed.sh
 
-wget https://www.dropbox.com/s/vp30krz8vamjoxn/lmerules.sh
+wget $DREAMERCONFIGSERVER2
 
 START_END=( $(grep -F "$MANAGMENT_IP" lmerules.sh -n | cut -d ":" -f 1) )
 sed "${START_END[0]},${START_END[1]}!d" lmerules.sh >> rules.sh

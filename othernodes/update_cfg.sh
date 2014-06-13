@@ -1,7 +1,17 @@
 #!/bin/bash
 rm testbed.sh
 
-wget https://www.dropbox.com/s/smsyctn1qj72kpk/testbed.sh
+if ! [ -f remote.cfg ]; then
+	echo -e "remote.cfg not found...exit"
+	exit 1
+fi
+
+if ! [ -n "$DREAMERCONFIGSERVER" ]; then
+	echo "Addresses Not Setted For Dreamer Nodes...exit"
+	exit 1
+fi
+
+wget $DREAMERCONFIGSERVER
 
 MANAGMENT_IP=$( ip -4 addr show dev eth0 | grep -m 1 "inet " | awk '{print $2}' | cut -d "/" -f 1 )
 

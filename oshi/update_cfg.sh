@@ -7,6 +7,8 @@ if ! [ -f remote.cfg ]; then
 	exit 1
 fi
 
+source remote.cfg
+
 if ! [ -n "$DREAMERCONFIGSERVER" ] || ! [ -n "$DREAMERCONFIGSERVER2" ]; then
 	echo "Addresses Not Setted For OSHI...exit"
 	exit 1

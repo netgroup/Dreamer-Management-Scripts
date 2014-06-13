@@ -6,6 +6,8 @@ if ! [ -f remote.cfg ]; then
 	exit 1
 fi
 
+source remote.cfg
+
 if ! [ -n "$DREAMERCONFIGSERVER" ]; then
 	echo "Addresses Not Setted For Dreamer Nodes...exit"
 	exit 1

@@ -5,11 +5,12 @@
 
 # Usage : ./managment_config.sh <option>
 #	update_mgmt_sh : update the configuration file management.sh
-# 	config_dsh : enable root login, configure dsh machine.list and group
+# 	config_dsh : enable root login, configure dsh machine.list and groups
 #	clone_dreamer : download code from $REPO_URL
 #   update_dreamer : update remote repo from $REPO_URL
-#	setup : download code from $REPO_URL, install software required and get testbed.sh
-#	tsb_cut_nodes : get testbed.sh on nodes
+#	setup_nodes : install software required and update configuration files on all nodes
+#	setup : download code from $REPO_URL, install software required and update configuration files on all nodes
+#	update_cfg_nodes : Update configuration files on all nodes
 #	config : configure all nodes
 #	clean : clean all nodes
 #	all : complete setup and config
@@ -20,13 +21,12 @@ USER="root"
 #XXX Address used for the download of management.sh
 MGT_SH_ADDR=https://www.dropbox.com/s/f5lse4stkxrwb6j/management.sh
 
-#TODO : recuperare dal file ()
-
 update_mgmt_sh(){
 	if ! [ -n "$MGT_SH_ADDR" ]; then
 		echo "MGT_SH_ADDR Not Setted"
 		exit 1
 	fi
+	rm management.sh
 	echo "Updating management.sh from $MGT_SH_ADDR..."
 	wget $MGT_SH_ADDR
 }
@@ -70,9 +70,7 @@ REPLACEMENT_VALUE="ssh"
 
 sed -i "s/\($TARGET_KEY *= *\).*/\1$REPLACEMENT_VALUE/" /etc/dsh/dsh.conf
 
-#Configure machines.list
-#edit /etc/dsh/machines.list file adding all machines of the testbed
-
+#Configures machines.list
 echo "Configure machines.list..."
 
 
@@ -83,8 +81,7 @@ for i in ${NODE_LIST[@]}; do
 	echo $USER@$i >> /etc/dsh/machines.list
 done
 
-#Creating groups
-#grouped creating files in /etc/dsh/group
+#Creates groups files in /etc/dsh/group
 echo "Creating groups..."
 for i in ${DSH_GROUPS[@]}; do
 	echo > /etc/dsh/group/$i
@@ -96,14 +93,7 @@ for i in ${DSH_GROUPS[@]}; do
 	done	
 done
 
-
-
-## fine configurazione DSH ##
-
 }
-
-
-#TODO: colonare il repo giusto
 
 WORK_DIR=/root/
 
@@ -121,15 +111,13 @@ LMERULES_SH_ADDR="https://www.dropbox.com/s/vp30krz8vamjoxn/lmerules.sh"
 
 
 clone_dreamer(){
-#Install DREAMER installation and management scripts
-#git clone su tutti i nodi della lista NODE_LIST
+#git clone on all hosts in NODE_LIST
 dsh -M -g all -c rm -r -f $REPO_DIR
 dsh -M -g all -c git clone $REPO_URL
 }
 
 update_dreamer(){
-#Update DREAMER installation and management scripts
-#git pull origin master su tutti i nodi della lista NODE_LIST
+#git pull origin master on all hosts in NODE_LIST
 dsh -M -g all -c "cd ./$REPO_DIR && git pull origin master"
 }
 
@@ -138,15 +126,12 @@ for_all_group() {
 # Executes $1 command on the deployed machines
 for i in ${DSH_GROUPS[@]}; do
         if [ "$i" = "OSHI" ]; then
-                #Install OSHI nodes
 				echo $i
                 dsh -M -g $i -c "cd ./$REPO_DIR/oshi/ && ./$1" 
         elif [ "$i" = "ROUTER" ];then
-                #Install IP_ROUTER nodes
                 echo $i
 				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && ./$1"  
         elif [ "$i" = "EUH" ] || [ "$i" = "CTRL" ];then
-				#Install other machines
 				echo $i
                 dsh -M -g $i -c "cd ./$REPO_DIR/othernodes/ && ./$1" 
 		else    
@@ -159,7 +144,7 @@ done
 }
 
 change_sh_addresses(){
-# Change remote.cfg in accordance to $TESTBED_SH_ADDR and %LMERULES_SH_ADDR
+# Change remote.cfg in accordance to $TESTBED_SH_ADDR and $LMERULES_SH_ADDR
 for i in ${DSH_GROUPS[@]}; do
         if [ "$i" = "OSHI" ]; then
 				echo $i
@@ -204,18 +189,18 @@ setup_nodes(){
 for_all_group setup.sh
 }
 
-tsb_cut_nodes(){
-#caricare il testbed.sh (da decidere)
-for_all_group tsb_cut.sh
+update_cfg_nodes(){
+#Update configuration files on all nodes
+for_all_group update_cfg.sh
 }
 
 config(){
-#config.sh su tutti i nodi 
+#Config all nodes 
 for_all_group config.sh
 }
 
 clean(){
-#clean su tutti i nodi
+#Clean all nodes
 for_all_group clean.sh
 }
 
@@ -223,7 +208,7 @@ setup(){
 #TODO:ripristinare
 #clone_dreamer
 setup_nodes
-tsb_cut_nodes
+update_cfg_nodes
 }
 
 all(){
@@ -235,16 +220,16 @@ config
 USAGE="\n
 # 	Usage : ./managment_config.sh <option>\n
 #	update_mgmt_sh : update the configuration file management.sh\n
-# 	config_dsh : enable root login, configure dsh machine.list and group\n
+# 	config_dsh : enable root login, configure dsh machine.list and groups\n
 #	clone_dreamer : download code from $REPO_URL\n
 #   update_dreamer : update remote repo from $REPO_URL\n
-#	setup : download code from $REPO_URL, install software required and get testbed.sh\n
-#	tsb_cut_nodes : get testbed.sh on nodes\n
+#	setup_nodes : install software required and update configuration files on all nodes\n
+#	setup : download code from $REPO_URL, install software required and update configuration files on all nodes\n
+#	update_cfg_nodes : Update configuration files on all nodes\n
 #	config : configure all nodes\n
 #	clean : clean all nodes\n
 #	all : complete setup and config\n
-#	change_sh_addresses : update remote.cfg on the machines\n
-"
+#	change_sh_addresses : update remote.cfg on the machines\n"
 
 while getopts ":c: " opt; do
     case $opt in
@@ -268,7 +253,7 @@ if [ -f management.sh ];
 		# If cfg file is present in current folder, use it
 		echo "---> File found in current folder. Using local configuration file management.sh"
 		source management.sh
-elif [ "$1" != "update_mgmt_sh" ];
+elif [ "$command" != "update_mgmt_sh" ];
 	then
 		echo "Error File Not Found..."
 		exit -1

@@ -10,7 +10,7 @@ echo "## do not interrupt the process.                           ##"
 echo "#############################################################"
 
 # Restoring default root folder after login, in .bashrc
-sed -i -e 's/cd \/etc\/dreamer//g' /root/.bashrc &&
+#sed -i -e 's/cd \/etc\/dreamer//g' /root/.bashrc &&
 
 # Removing DREAMER load at startup from OVS
 #echo -e "\n-Removing DREAMER load at startup from OVS"
@@ -157,7 +157,7 @@ sed -i -e '/^$/d' /etc/network/interfaces &&
 echo -e "\n-Restarting network services"
 /etc/init.d/networking restart &&
 
-echo -e "\n\nDREAMER IP/SDN hybrid node configuration cleaning ended succesfully. Enjoy!\n"
+echo -e "\n\nDREAMER configuration cleaning ended succesfully. Enjoy!\n"
 
 EXIT_SUCCESS=0
 exit $EXIT_SUCCESS

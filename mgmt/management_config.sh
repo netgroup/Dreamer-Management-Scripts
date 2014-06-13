@@ -1,14 +1,18 @@
 #!/bin/bash
 
-# requirements dsh, expect
+# XXX Requirements
+# You have to install dsh, expect
+
 # Usage : ./managment_config.sh <option>
-# 	config_dsh : enable root login, configure dsh machine.list and group 
-#	setup : download code from git, install software requirements and get testbed.sh
+#	update_mgmt_sh : update the configuration file management.sh
+# 	config_dsh : enable root login, configure dsh machine.list and group
+#	clone_dreamer : download code from $REPO_URL
+#   update_dreamer : update remote repo from $REPO_URL
+#	setup : download code from $REPO_URL, install software required and get testbed.sh
 #	tsb_cut_nodes : get testbed.sh on nodes
 #	config : configure all nodes
 #	clean : clean all nodes
 #	all : complete setup and config
-#	update_mgmt_sh : update the configuration file management.sh
 #	change_sh_addresses : update remote.cfg on the machines
 
 USER="root"
@@ -102,11 +106,19 @@ done
 #TODO: colonare il repo giusto
 
 WORK_DIR=/root/
-REPO_DIR=dreamer-setup-scripts
+
+#GITHUB
+REPO_DIR=Dreamer-Setup-Scripts
 REPO_URL=https://github.com/netgroup/Dreamer-Setup-Scripts
+
+#XXX Operation with this repo could not work (bitbucket requests password)
+#BITBUCKET
+#REPO_DIR=dreamer-setup-scripts
+#REPO_URL=https://pierventre@bitbucket.org/ssalsano/dreamer-setup-scripts.git
 
 TESTBED_SH_ADDR="https://www.dropbox.com/s/smsyctn1qj72kpk/testbed.sh"
 LMERULES_SH_ADDR="https://www.dropbox.com/s/vp30krz8vamjoxn/lmerules.sh"
+
 
 clone_dreamer(){
 #Install DREAMER installation and management scripts
@@ -115,9 +127,15 @@ dsh -M -g all -c rm -r -f $REPO_DIR
 dsh -M -g all -c git clone $REPO_URL
 }
 
+update_dreamer(){
+#Update DREAMER installation and management scripts
+#git pull origin master su tutti i nodi della lista NODE_LIST
+dsh -M -g all -c "cd ./$REPO_DIR && git pull origin master"
+}
+
 
 for_all_group() {
-
+# Executes $1 command on the deployed machines
 for i in ${DSH_GROUPS[@]}; do
         if [ "$i" = "OSHI" ]; then
                 #Install OSHI nodes
@@ -141,7 +159,7 @@ done
 }
 
 change_sh_addresses(){
-
+# Change remote.cfg in accordance to $TESTBED_SH_ADDR and %LMERULES_SH_ADDR
 for i in ${DSH_GROUPS[@]}; do
         if [ "$i" = "OSHI" ]; then
 				echo $i
@@ -214,6 +232,37 @@ setup
 config
 }
 
+USAGE="\n
+# 	Usage : ./managment_config.sh <option>\n
+#	update_mgmt_sh : update the configuration file management.sh\n
+# 	config_dsh : enable root login, configure dsh machine.list and group\n
+#	clone_dreamer : download code from $REPO_URL\n
+#   update_dreamer : update remote repo from $REPO_URL\n
+#	setup : download code from $REPO_URL, install software required and get testbed.sh\n
+#	tsb_cut_nodes : get testbed.sh on nodes\n
+#	config : configure all nodes\n
+#	clean : clean all nodes\n
+#	all : complete setup and config\n
+#	change_sh_addresses : update remote.cfg on the machines\n
+"
+
+while getopts ":c: " opt; do
+    case $opt in
+            c) command=$OPTARG
+			   shift;;      
+			:) echo "Option -$OPTARG requires an argument."
+			   echo -e $USAGE
+      		   exit 1;;
+    esac
+	shift
+done
+
+if [ -z "$command" ]; then
+		echo -e $USAGE
+		exit 1
+fi
+
+
 if [ -f management.sh ];
 	then
 		# If cfg file is present in current folder, use it
@@ -225,4 +274,4 @@ elif [ "$1" != "update_mgmt_sh" ];
 		exit -1
 fi
 
-$1
+$command

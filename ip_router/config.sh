@@ -457,8 +457,8 @@ if [ "$TUNNELING" = "VXLAN" ];then
 
 fi
 
-echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
-echo -e "cd /etc/dreamer" >> /root/.bashrc
+#echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
+#echo -e "cd /etc/dreamer" >> /root/.bashrc
 
 echo -e "\n\nDREAMER IP/SDN hybrid node configuration ended succesfully. Enjoy!\n"
 

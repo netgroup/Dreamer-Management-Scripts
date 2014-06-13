@@ -381,8 +381,8 @@ route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} 
 
 
 
-echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
-echo -e "cd /etc/dreamer" >> /root/.bashrc
+#echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
+#echo -e "cd /etc/dreamer" >> /root/.bashrc
 
 echo -e "\n\nDREAMER node configuration process ended succesfully. Enjoy!\n"
 

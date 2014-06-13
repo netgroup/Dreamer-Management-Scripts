@@ -462,8 +462,8 @@ fi
 #sed -i '72a\
 #bash /etc/dreamer/reconfig-device.sh' /etc/init.d/openvswitchd
 
-echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
-echo -e "cd /etc/dreamer" >> /root/.bashrc
+#echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
+#echo -e "cd /etc/dreamer" >> /root/.bashrc
 
 echo -e "\n\nDREAMER IP/SDN hybrid node configuration ended succesfully. Enjoy!\n"
 

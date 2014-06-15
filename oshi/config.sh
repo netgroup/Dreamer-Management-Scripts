@@ -9,13 +9,7 @@ echo "## The configuration process can last many minutes. Please ##"
 echo "## and do not interrupt the process.                       ##"
 echo "#############################################################"
 
-#temporaneamente...
 TUNL_BRIDGE=br-tun
-
-
-#TUNNELING="OpenVPN"
-OSHI_VXLAN_TYPE="one_bridge"
-#OSHI_VXLAN_TYPE="two_bridge"
 
 oshi () {
 
@@ -42,18 +36,11 @@ oshi () {
 	ovs-vsctl set bridge $BRIDGENAME other-config:datapath-id=$DPID
 
 	if [ "$TUNNELING" = "VXLAN" ];then
-		
-		if [ "$OSHI_VXLAN_TYPE" = "one_bridge" ];then
-			setup_interfaces
-		elif [ "$OSHI_VXLAN_TYPE" = "two_bridge" ];then
-			create_vxlan_bridge
-		fi
 
 		echo -e "\n-Adding interfaces to bridge $BRIDGENAME"
 		for i in ${TAP[@]}; do
-    		eval remoteport=\${${i}[0]}  #cambiare con nuovo array tap
+    		eval remoteport=\${${i}[0]}  
 			eval remoteaddr=\${!$i[1]}
-			#ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=flow options:dst_port=$remoteport
 			ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport
 		done
 	else
@@ -70,23 +57,6 @@ oshi () {
 	
 	echo -e "\n-Creating static rules on OpenVSwitch"
 	python lme.py
-	#declare -a ofporttap &&
-	#declare -a ofportVI &&
-
-	#for i in ${TAP[@]}; do
-	#    OFPORTSTAP[${#OFPORTSTAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-	#done
-	#
-	#for i in ${VI[@]}; do
-	#	OFPORTSVI[${#OFPORTSVI[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-	#done
-	#for (( i=0; i<${#OFPORTSTAP[@]}; i++ )); do
-	#        ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=300,in_port=${OFPORTSTAP[$i]},action=output:${OFPORTSVI[$i]}
-	#        ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=300,in_port=${OFPORTSVI[$i]},action=output:${OFPORTSTAP[$i]}
-	#done
-	#
-	#ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=301,dl_type=0x88cc,action=controller 
-	#ovs-ofctl add-flow $BRIDGENAME hard_timeout=0,priority=301,dl_type=0x8942,action=controller 
 
 }
 
@@ -123,41 +93,6 @@ setup_interfaces () {
 
 }
 
-
-create_vxlan_bridge () {
-
-	ii=0
-	for j in ${INTERFACES[@]}; do
-		echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE-$j"
-
-		eval interface_ip=\${${j}[0]}
-		eval interface_netmask=\${${j}[1]}
-		ip link set ${INTERFACES[$ii]} up
-		vconfig add ${INTERFACES[$ii]} $SLICEVLAN
-		ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
-		ovs-vsctl add-br $TUNL_BRIDGE-$j
-		ovs-vsctl add-port  $TUNL_BRIDGE-$j ${INTERFACES[$ii]}.$SLICEVLAN
-		ifconfig $TUNL_BRIDGE-$j $interface_ip netmask $interface_netmask
-		ii=$((ii+1))
-	done
-
-	# set static routes
-    declare -a ENDIPS
-    for i in ${TAP[@]}; do
-
-            if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
-                    ENDIPS[${#ENDIPS[@]}]=$ELEMENT
-            fi
-    done
-    for (( i=0; i<${#ENDIPS[@]}; i++ )); do
-            eval remoteaddr=\${${ENDIPS[$i]}[0]}
-            eval interface=\${${ENDIPS[$i]}[1]}
-            ip r a $remoteaddr dev $TUNL_BRIDGE-$interface  
-    done
-
-}
-
-
 echo -e "\n-Looking for a valid configuration file..."
 echo -e "---> Looking for configuration file in current directory ($(pwd))..."
 if [ -f testbed.sh ];
@@ -176,91 +111,10 @@ if [ -f testbed.sh ];
 		source testbed.sh
 fi
 
-# if [ "$TESTBED" = "OFELIA" ]; then
-
-# 	# Check addresses
-# 	echo -e "\n-Checking addresses compatibilities between testbed mgmt network and chosen addresses"
-# 	MGMTADDR=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}')
-# 	MGMTMASK=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}')
-# 	MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-# 	for (( i=0; i<${#INTERFACES[@]}; i++ )); do
-# 	        eval addr=\${${INTERFACES[$i]}[0]}
-# 	        eval netmask=\${${INTERFACES[$i]}[1]}
-# 	        CURRENTNET=$(ipcalc $addr $netmask 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-# 	        if [ $CURRENTNET == $MGMTNETWORK ]
-# 	                then
-# 	                        echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-# 	                        EXIT_ERROR=-1
-# 	                        exit $EXIT_ERROR
-# 	        fi
-# 	done
-# 	for i in ${VI[@]}; do
-# 	        eval QUAGGAIP=\${${i}[0]}
-# 			if [ "$QUAGGAIP" != "0.0.0.0/32" ]; then
-# 	                CURRENTNET=$(ipcalc $QUAGGAIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-# 	                if [ $CURRENTNET == $MGMTNETWORK ]
-# 	                        then
-# 	                                echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-# 	                                EXIT_ERROR=-1
-# 	                                exit $EXIT_ERROR
-# 	                fi
-# 	        fi
-# 	done
-# fi
-
-if [ "$TUNNELING" = "OpenVPN" ]; then
 
 echo -e "\n-Setting up physical interfaces"
+
 setup_interfaces
-# # deleting white spaces in /etc/network/interfaces
-# sed -i -e '/^$/d' /etc/network/interfaces &&
-# # deleting lines related to the interfaces involved in /etc/network/interfaces
-# for i in ${INTERFACES[@]}; do
-# 	sed -i '/'$i'/d' /etc/network/interfaces
-# done
-# # adding configuration for interfaces into /etc/network/interfaces
-# for i in ${INTERFACES[@]}; do
-# echo "
-# auto ${i}
-# iface ${i} inet manual
-# up ifconfig ${i} up" >> /etc/network/interfaces
-# done
-
-# # adding configuration for vlan interfaces into /etc/network/interfaces
-# echo -e "\n-Setting VLAN ${slicevlan} on interfaces"
-# for (( i=0; i<${#INTERFACES[@]}; i++ )); do
-# 	eval addr=\${${INTERFACES[$i]}[0]}
-# 	eval netmask=\${${INTERFACES[$i]}[1]}
-# 	echo "
-# auto ${INTERFACES[$i]}.$SLICEVLAN
-# iface ${INTERFACES[$i]}.$SLICEVLAN inet static
-# address $addr
-# netmask $netmask">> /etc/network/interfaces
-# done
-
-# echo -e "\n-Setting static routes"
-# declare -a ENDIPS
-# for i in ${TAP[@]}; do
-# 	eval ELEMENT=\${${i}[2]}
-# 	if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ]
-# 		then
-# 			ENDIPS[${#ENDIPS[@]}]=$ELEMENT
-# 	fi
-# done
-# for (( i=0; i<${#ENDIPS[@]}; i++ )); do
-# 	eval remoteaddr=\${${ENDIPS[$i]}[0]}
-# 	eval interface=\${${ENDIPS[$i]}[1]}
-# 	sed -i "/iface $interface.$SLICEVLAN inet static/a\
-# up route add -host $remoteaddr dev $interface.$SLICEVLAN
-# " /etc/network/interfaces
-# done
-
-# echo -e "\n-Restarting network services"
-# /etc/init.d/networking restart 
-
-fi
-
-
 
 if [ $(ps aux | grep avahi-daemon | wc -l) -gt 1 ]; then
 	/etc/init.d/avahi-daemon stop
@@ -425,14 +279,6 @@ ip link set ${i}.${COEX[1]} up 2> /dev/null
 done
 
 fi
-
-# Appending rules to reconfig OVS port associations when the service start, to the service file /etc/init.d/openvswitchd
-#echo -e "\n-Setting up DREAMER auto load into OpenvSwitch"
-#sed -i '72a\
-#bash /etc/dreamer/reconfig-device.sh' /etc/init.d/openvswitchd
-
-#echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
-#echo -e "cd /etc/dreamer" >> /root/.bashrc
 
 echo -e "\n\nDREAMER IP/SDN hybrid node configuration ended succesfully. Enjoy!\n"
 

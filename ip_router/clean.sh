@@ -9,20 +9,11 @@ echo "## The cleaning process can last many minutes. Please,     ##"
 echo "## do not interrupt the process.                           ##"
 echo "#############################################################"
 
-# Restoring default root folder after login, in .bashrc
-#sed -i -e 's/cd \/etc\/dreamer//g' /root/.bashrc &&
-
-# Removing DREAMER load at startup from OVS
-#echo -e "\n-Removing DREAMER load at startup from OVS"
-#sed -i -e '/bash \/etc\/dreamer\/reconfig-device.sh/,+0d' /etc/init.d/openvswitchd &&
-
 # Reset of OpenVSwitch
 for i in $(ovs-vsctl list-br); do
 	ovs-vsctl del-br $i
 done
 
-#remove ovs-system bridge
-#TODO add if vxlan
 ovs-dpctl del-dp ovs-system
 
 # OpenVPN
@@ -121,8 +112,9 @@ for (( i=0; i<${#interfaces[@]}; i++ )); do
 	vconfig rem ${interfaces[$i]}.${vlan[$i]}
 done
 
-# deleting lines related to the interfaces involved in /etc/network/interfaces
-sed -i -e '/auto eth[^0]./,/\n/d' /etc/network/interfaces &&
+#TODO: test e poi togliere
+# # deleting lines related to the interfaces involved in /etc/network/interfaces
+# sed -i -e '/auto eth[^0]./,/\n/d' /etc/network/interfaces &&
 
 # Reset Hostname to default (oshi)
 echo -e "\n-Setting hostname"
@@ -153,10 +145,11 @@ done
 echo -e "\n-Removing loopback address"
 ip addr del $(ip a | grep "scope global lo" | awk '{split($0,a," "); print a[2]}') dev lo &&
 
-echo -e "\n-Cleaning up physical interfaces configuration"
-# deleting lines related to the interfaces involved in /etc/network/interfaces
-sed -i -e '/auto eth[^0]/,/\n/d' /etc/network/interfaces &&
-sed -i -e '/^$/d' /etc/network/interfaces &&
+#TODO: test e poi togliere
+# echo -e "\n-Cleaning up physical interfaces configuration"
+# # deleting lines related to the interfaces involved in /etc/network/interfaces
+# sed -i -e '/auto eth[^0]/,/\n/d' /etc/network/interfaces &&
+# sed -i -e '/^$/d' /etc/network/interfaces &&
 
 echo -e "\n-Restarting network services"
 /etc/init.d/networking restart &&

@@ -9,29 +9,18 @@ echo "## The configuration process can last many minutes. Please ##"
 echo "## and do not interrupt the process.                       ##"
 echo "#############################################################"
 
-#temporaneamente...
 TUNL_BRIDGE=br-tun
 
-
-plain_node_vxlan2 () {
+plain_node_vxlan () {
         
         ii=0
-        
-        # setup_interfaces
         ovs-vsctl add-br $TUNL_BRIDGE
         echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE"
-        
-        # y=0
+
         for i in ${TAP[@]}; do
-                eval remoteport=\${${i}[0]} # cambiare con nuovo array tap
+                eval remoteport=\${${i}[0]} 
                 eval remoteaddr=\${!$i[1]}
-                # ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
                 ovs-vsctl add-port $TUNL_BRIDGE  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport
-                # ovs-vsctl add-port $TUNL_BRIDGE vi-$i -- set Interface vi-$i type=internal
-                # eval ip=\${${TAP[$y]}[2]}
-                # echo $ip
-                # ip a a $ip  dev vi-$i
-                # y=$((y+1))
         done
 
         echo -e "\n-Adding internal virtual interfaces to OpenVSwitch"
@@ -62,26 +51,26 @@ plain_node_vxlan2 () {
 }
 
 setup_interfaces () {
-        ii=0
-        for j in ${INTERFACES[@]}; do
-                echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE"
-                eval interface_ip=\${${j}[0]}
-                eval interface_netmask=\${${j}[1]}
-		echo $interface_ip
-		echo $interface_netmask
-                ip link set ${INTERFACES[$ii]} up
-                vconfig add ${INTERFACES[$ii]} $SLICEVLAN
-                ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
-                ifconfig $j.$SLICEVLAN $interface_ip netmask $interface_netmask
-                ii=$((ii+1))
-        done
-        # set static routes
+    ii=0
+    for j in ${INTERFACES[@]}; do
+            echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE"
+            eval interface_ip=\${${j}[0]}
+            eval interface_netmask=\${${j}[1]}
+        	echo $interface_ip
+        	echo $interface_netmask
+            ip link set ${INTERFACES[$ii]} up
+            vconfig add ${INTERFACES[$ii]} $SLICEVLAN
+            ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
+            ifconfig $j.$SLICEVLAN $interface_ip netmask $interface_netmask
+            ii=$((ii+1))
+    done
+    # set static routes
     declare -a ENDIPS
     for i in ${TAP[@]}; do
             if [ "$TUNNELING" = "OpenVPN" ]; then
                 eval ELEMENT=\${${i}[3]}
             else
-                eval ELEMENT=\${${i}[1]} # cambiare con nuovo array tap
+                eval ELEMENT=\${${i}[1]} 
 	        fi
             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
@@ -94,81 +83,6 @@ setup_interfaces () {
             ip r a $remoteaddr dev $interface.$SLICEVLAN 
     done
 }
-
-
-# plain_node_vxlan () {
-        
-#         ii=0
-#         for j in ${INTERFACES[@]}; do
-                
-#                 create_vxlan_bridge
-
-#                 echo -e "\n-Adding interfaces to bridge $TUNL_BRIDGE-$j"
-                
-#                 #TODO: solo le tap che stanno su quella eth 
-
-#                 y=0
-#                 for i in ${TAP[@]}; do
-#                         eval remoteport=\${${i}[1]} # cambiare con nuovo array tap
-#                         eval remoteaddr=\${!$i[3]} 
-#                         ovs-vsctl add-port $TUNL_BRIDGE-$j  $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:dst_port=$remoteport
-#                         ovs-vsctl add-port $TUNL_BRIDGE-$j vi-$i -- set Interface vi-$i type=internal
-#                         eval ip=\${${TAP[$y]}[2]}
-#                         echo $ip
-#                         ip a a $ip  dev vi-$i
-#                         y=$((y+1))
-#                 done
-#                 declare -a port_tap &&
-#                 declare -a port_vi_tap &&
-
-#                 for i in ${TAP[@]}; do
-#                     PORT_TAP[${#PORT_TAP[@]}]=$(ovs-vsctl find Interface name=$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-#                     PORT_VI_TAP[${#PORT_VI_TAP[@]}]=$(ovs-vsctl find Interface name=vi-$i | grep -m 1 ofport | awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')
-#                 done
-                
-#                 for (( i=0; i<${#PORT_TAP[@]}; i++ )); do
-#                         ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${PORT_TAP[$i]},action=output:${PORT_VI_TAP[$i]}
-#                         ovs-ofctl add-flow $TUNL_BRIDGE-$j hard_timeout=0,priority=300,in_port=${PORT_VI_TAP[$i]},action=output:${PORT_TAP[$i]}
-#                 done
-
-#                 ii=$((ii+1))
-#         done
-# }
-
-# create_vxlan_bridge () {
-
-#         ii=0
-#         for j in ${INTERFACES[@]}; do
-#                 echo -e "\n-Creating OpenVSwitch bridge $TUNL_BRIDGE-$j"
-
-#                 eval interface_ip=\${${j}[0]}
-#                 eval interface_netmask=\${${j}[1]}
-#                 ip link set ${INTERFACES[$ii]} up
-#                 vconfig add ${INTERFACES[$ii]} $SLICEVLAN
-#                 ip link set ${INTERFACES[$ii]}.$SLICEVLAN up
-#                 ovs-vsctl add-br $TUNL_BRIDGE-$j
-#                 ovs-vsctl add-port  $TUNL_BRIDGE-$j ${INTERFACES[$ii]}.$SLICEVLAN
-#                 ifconfig $TUNL_BRIDGE-$j $interface_ip netmask $interface_netmask
-#         #       ifconfig $TUNL_BRIDGE-$i 0
-#                 ip r d 192.168.0.0/16 dev $TUNL_BRIDGE-$j 
-#                 ii=$((ii+1))
-#         done
-
-#         # set static routes
-#     declare -a ENDIPS
-#     for i in ${TAP[@]}; do
-#             eval ELEMENT=\${${i}[3]} # cambiare con nuovo array tap
-#             if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
-#                     ENDIPS[${#ENDIPS[@]}]=$ELEMENT
-#             fi
-#     done
-#     for (( i=0; i<${#ENDIPS[@]}; i++ )); do
-#             eval remoteaddr=\${${ENDIPS[$i]}[0]}
-#             eval interface=\${${ENDIPS[$i]}[1]}
-#             ip r a $remoteaddr dev $TUNL_BRIDGE-$interface  
-#     done
-
-# }
 
 echo -e "\n-Looking for a valid configuration file..."
 echo -e "---> Looking for configuration file in current directory ($(pwd))..."
@@ -187,111 +101,6 @@ if [ -f testbed.sh ];
 		fi
 		source testbed.sh
 fi
-
-# if [ "$TESTBED" = "OFELIA" ]; then
-
-
-# # Check addresses
-#     echo -e "\n-Checking addresses compatibilities between testbed mgmt network and chosen addresses"
-#     MGMTADDR=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $2}' | awk -F':' '{print $2}')
-#     MGMTMASK=$(ifconfig eth0 | grep "inet addr" | awk -F' ' '{print $4}' | awk -F':' '{print $2}')
-#     MGMTNETWORK=$(ipcalc $MGMTADDR $MGMTMASK 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-#     for (( i=0; i<${#INTERFACES[@]}; i++ )); do
-#             eval addr=\${${INTERFACES[$i]}[0]}
-#             eval netmask=\${${INTERFACES[$i]}[1]}
-#             CURRENTNET=$(ipcalc $addr $netmask 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-#             if [ $CURRENTNET == $MGMTNETWORK ]
-#                     then
-#                             echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-#                             EXIT_ERROR=-1
-#                             exit $EXIT_ERROR
-#             fi
-#     done
-    
-#     if [ "$TUNNELING" = "OpenVPN" ]; then
-
-#         for i in ${TAP[@]}; do
-#         eval LOCALIP=\${${i}[2]}
-#         CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-#         if [ $CURRENTNET == $MGMTNETWORK ]
-#                 then
-#                         echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-#                         EXIT_ERROR=-1
-#                         exit $EXIT_ERROR
-#         fi
-#         done
-    
-#     else
-#         for i in ${VI[@]}; do
-#         	eval LOCALIP=\${${i}[0]}
-#         		if [ "$LOCALIP" != "0.0.0.0/32" ]; then
-#                         CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-#                         if [ $CURRENTNET == $MGMTNETWORK ]
-#                                 then
-#                                         echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-#                                         EXIT_ERROR=-1
-#                                         exit $EXIT_ERROR
-#                         fi
-#                 fi
-#                 CURRENTNET=$(ipcalc $LOCALIP 2> /dev/null | grep Network | awk '{split($0,a," "); print a[2]}')
-#                 if [ $CURRENTNET == $MGMTNETWORK ]
-#                         then
-#                                 echo -e "\nERROR: IP addresses used in testbed.sh conflict with management network. Please choouse other adresses."
-#                                 EXIT_ERROR=-1
-#                                 exit $EXIT_ERROR
-#                 fi
-#         done
-#     fi
-# fi
-
-# if [ "$TUNNELING" = "OpenVPN" ]; then
-
-# echo -e "\n-Setting up physical interfaces"
-# # deleting white spaces in /etc/network/interfaces
-# sed -i -e '/^$/d' /etc/network/interfaces &&
-# # deleting lines related to the interfaces involved in /etc/network/interfaces
-# sed -i -e 's/auto eth[^0]//g' /etc/network/interfaces &&
-# # adding configuration for interfaces into /etc/network/interfaces
-# for i in ${INTERFACES[@]}; do
-# echo "
-# auto ${i}
-# iface ${i} inet manual
-# up ifconfig ${i} up" >> /etc/network/interfaces
-# done
-
-# # adding configuration for vlan interfaces into /etc/network/interfaces
-# echo -e "\n-Setting VLAN ${slicevlan} on interfaces"
-# for (( i=0; i<${#INTERFACES[@]}; i++ )); do
-# 	eval addr=\${${INTERFACES[$i]}[0]}
-# 	eval netmask=\${${INTERFACES[$i]}[1]}
-# 	echo "
-# auto ${INTERFACES[$i]}.$SLICEVLAN
-# iface ${INTERFACES[$i]}.$SLICEVLAN inet static
-# address $addr
-# netmask $netmask">> /etc/network/interfaces
-# done
-
-# echo -e "\n-Setting static routes"
-# declare -a ENDIPS
-# for i in ${TAP[@]}; do
-# 	eval ELEMENT=\${${i}[3]}
-# 	if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ]
-# 		then
-# 			ENDIPS[${#ENDIPS[@]}]=$ELEMENT
-# 	fi
-# done
-# for (( i=0; i<${#ENDIPS[@]}; i++ )); do
-# 	eval remoteaddr=\${${ENDIPS[$i]}[0]}
-# 	eval interface=\${${ENDIPS[$i]}[1]}
-# 	sed -i "/iface $interface.$SLICEVLAN inet static/a\
-# up route add -host $remoteaddr dev $interface.$SLICEVLAN
-# " /etc/network/interfaces
-# done
-
-# echo -e "\n-Restarting network services"
-# /etc/init.d/networking restart 
-
-# fi
 
 setup_interfaces
 
@@ -333,7 +142,7 @@ echo -e "\n-Starting OpenVPN service"
 
 else
 
-plain_node_vxlan2
+plain_node_vxlan
 
 fi
 
@@ -342,11 +151,6 @@ if [ "$TESTBED" = "OFELIA" ]; then
     route add -net ${MGMTNET[0]} netmask ${MGMTNET[1]} gw ${MGMTNET[2]} dev ${MGMTNET[3]} 
 fi
 route add -net ${STATICROUTE[0]} netmask ${STATICROUTE[1]} gw ${STATICROUTE[2]} dev ${STATICROUTE[3]}
-
-
-
-#echo -e "\n-Setting in bash.rc default root folder after login to /etc/dreamer"
-#echo -e "cd /etc/dreamer" >> /root/.bashrc
 
 echo -e "\n\nDREAMER node configuration process ended succesfully. Enjoy!\n"
 

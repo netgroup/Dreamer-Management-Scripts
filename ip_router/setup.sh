@@ -3,7 +3,7 @@
 
 echo -e "\n"
 echo "############################################################"
-echo "##            DREAMER IP/SDN Hyibrid node setup           ##"
+echo "##            DREAMER IP Router node setup                ##"
 echo "##                                                        ##"
 echo "## The installation process can last many minutes.        ##"
 echo "## Plase wait and do not interrupt the setup process.     ##"
@@ -215,65 +215,6 @@ esac\n
 exit 0' > /etc/init.d/openvswitchd &&
 chmod +x /etc/init.d/openvswitchd &&
 update-rc.d openvswitchd defaults &&
-
-# Creating folder /etc/dreamer if it doesn't exist
-#echo -e "\n-Creating /etc/dreamer folder"
-#mkdir -p /etc/dreamer
-#
-#DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-#
-#echo -e "\n-Copying utilities and configuration files to /etc/dreamer"
-# Copying testbed.sh configuration file in /etc/dreamer - if present
-#if [ -f $DIR/testbed.sh ];
-#	then
-#		echo -e "\n---> Copying testbed.sh configuration file into /etc/dreamer"
-#		cp $DIR/testbed.sh /etc/dreamer/testbed.sh
-#	else
-#		echo -e "\n---> WARNING: testbed.sh file is not present. We suggest to copy the original file manually to /etc/dreamer"
-#fi
-# Copying testbed.sh configuration file in /etc/dreamer - if present
-#if [ -f $DIR/remote.cfg ];
-#	then
-#		echo -e "\n---> Copying remote.cfg configuration file into /etc/dreamer"
-#		cp $DIR/remote.cfg /etc/dreamer/remote.cfg
-#	else
-#		echo -e "\n---> WARNING: remote.cfg not found. Creating new /etc/dreamer/remote.cfg file."
-#		echo -e "# DREAMERCONFIGSERVER parameter is used to fetch the dreamer update server. Put your testbed.sh file there, delete local configuration files, run clean and config utils
-# i.e. DREAMERCONFIGSERVER=http://www.yourserver.com/testbed.sh\n
-#DREAMERCONFIGSERVER=" > /etc/dreamer/remote.cfg
-#fi
-# Copying clean.sh file if present
-#if [ -f $DIR/clean.sh ];
-#	then
-#		echo -e "\n---> Copying clean.sh to /etc/dreamer"
-#		cp $DIR/clean.sh /etc/dreamer/clean.sh
-#	else
-#		echo -e "\n---> WARNING: clean.sh file is not present. We suggest to copy the original file manually to /etc/dreamer"
-#fi
-# Copying config.sh file if present
-#if [ -f $DIR/config.sh ];
-#	then
-#		echo -e "\n---> Copying config.sh to /etc/dreamer"
-#		cp $DIR/config.sh /etc/dreamer/config.sh
-#	else
-#		echo -e "\n---> WARNING: config.sh file is not present. We suggest to copy the original file manually to /etc/dreamer"
-#fi
-# Copying clean-config.sh file if present
-#if [ -f $DIR/clean-config.sh ];
-#	then
-#		echo -e "\n---> Copying clean-config.sh to /etc/dreamer"
-#		cp $DIR/clean-config.sh /etc/dreamer/clean-config.sh
-#	else
-#		echo -e "\n---> WARNING: clean-config.sh file is not present. We suggest to copy the original file manually to /etc/dreamer"
-#fi
-# Copying reconfig-device.sh file if present
-#if [ -f $DIR/reconfig-device.sh ];
-#	then
-#		echo -e "\n---> Copying reconfig-device.sh to /etc/dreamer"
-#		cp $DIR/reconfig-device.sh /etc/dreamer/reconfig-device.sh
-#	else
-#		echo -e "\n---> WARNING: reconfig-device.sh file is not present. We suggest to copy the original file manually to /etc/dreamer"
-#fi
 
 touch /etc/setup
 

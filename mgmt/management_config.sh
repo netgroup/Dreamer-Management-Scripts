@@ -16,7 +16,7 @@
 #	all : complete setup and config
 #	change_sh_addresses : update remote.cfg on the machines
 
-USER="root"
+LOCAL_USER="root"
 
 #XXX Address used for the download of management.sh
 MGT_SH_ADDR=https://www.dropbox.com/s/f5lse4stkxrwb6j/management.sh
@@ -41,10 +41,13 @@ echo
 echo "Please enter testbed root pass: "
 read -s ROOT_PASS
 echo
+
+GENERATED=0
+
 while true; do
     read -p "Generate ssh key (y/n)?" yn 
     case $yn in
-        [Yy]* ) ssh-keygen; break;;
+        [Yy]* ) ssh-keygen;  GENERATED=1; break;;
         [Nn]* ) break;;
         * ) echo "(y/n)";;
     esac
@@ -56,10 +59,45 @@ echo "Enable ssh root access..."
 TARGET_KEY="PermitRootLogin"
 REPLACEMENT_VALUE="yes"
 
+if [ "$USER" != "root" ]; then
+
+echo "Please specifiy RSA path (empty for /home/$USER/.ssh/id_rsa): "
+TEMP=/home/$USER/.ssh/id_rsa
+
+else
+
+echo "Please specifiy RSA path (empty for /$USER/.ssh/id_rsa): "
+TEMP=/$USER/.ssh/id_rsa
+
+fi
+
+read RSA_PATH
+
+if [ "$RSA_PATH" = "" ]; then
+
+RSA_PATH=$TEMP
+
+fi 
+
+if [ "$GENERATED" -eq 1 ]; then
+
+ssh-add -D
+ssh-add "$RSA_PATH"
+
+fi
+
 for i in ${NODE_LIST[@]}; do
-	./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "sed -i \"s/\($TARGET_KEY * *\).*/\1$REPLACEMENT_VALUE/\" /etc/ssh/sshd_config"
-	./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "/etc/init.d/ssh restart"
- 	./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "echo $(cat /root/.ssh/id_rsa.pub) >/root/.ssh/authorized_keys"
+	CONFIGURED=$(./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "cat /root/.ssh/authorized_keys" | grep conet@Conet-VM | wc -l)
+	if [ "$CONFIGURED" -eq 0 ] || [ "$GENERATED" -eq 1 ]; then
+		# XXX We can have problem if the machine is configured with rsa.pub and it doesn't allow root login
+		echo -e "\n$i not properly configured"
+		./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "sed -i \"s/\($TARGET_KEY * *\).*/\1$REPLACEMENT_VALUE/\" /etc/ssh/sshd_config"
+		./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "/etc/init.d/ssh restart"
+		./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "sed -i -e '/$USER@$HOSTNAME/d' /root/.ssh/authorized_keys"
+	 	./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "echo $(cat $RSA_PATH.pub) >> /root/.ssh/authorized_keys"
+	else
+		echo -e "\n$i properly configured"	
+	fi
 done
 echo ""
 echo "Configure DSH..."
@@ -78,7 +116,7 @@ rm /etc/dsh/machines.list
 
 for i in ${NODE_LIST[@]}; do
 	echo $i
-	echo $USER@$i >> /etc/dsh/machines.list
+	echo $LOCAL_USER@$i >> /etc/dsh/machines.list
 done
 
 #Creates groups files in /etc/dsh/group
@@ -88,8 +126,8 @@ for i in ${DSH_GROUPS[@]}; do
 	echo $i
 	eval group=\${${i}[*]}
 	for host in ${group[@]};do
-		echo $USER@$host
-		echo $USER@$host >> /etc/dsh/group/$i
+		echo $LOCAL_USER@$host
+		echo $LOCAL_USER@$host >> /etc/dsh/group/$i
 	done	
 done
 

@@ -401,6 +401,10 @@ echo -e "\n-Enabling Linux forwarding"
 echo "1" > /proc/sys/net/ipv4/ip_forward &&
 echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf &&
 
+# DISABLE LINUX RPF
+echo -e "\n-Disabling Linux RPF"
+sysctl -w "net.ipv4.conf.all.rp_filter=0" &&
+
 echo -e "\n-Starting Quagga daemon"
 /etc/init.d/quagga start
 

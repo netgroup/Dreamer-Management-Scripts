@@ -77,6 +77,10 @@ echo "0" > /proc/sys/net/ipv4/ip_forward &&
 sed -i -e 's/net.ipv4.ip_forward = 1//g' /etc/sysctl.conf &&
 sed -i -e '/^$/d' /etc/sysctl.conf &&
 
+# ENABLE LINUX RPF
+echo -e "\n-Enabling Linux RPF"
+sysctl -w "net.ipv4.conf.all.rp_filter=1" &&
+
 # Reset static routes
 declare -a remoteaddr
 declare -a interfaces

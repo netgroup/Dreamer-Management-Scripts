@@ -81,6 +81,7 @@ fi
 
 if [ "$GENERATED" -eq 1 ]; then
 
+eval $(ssh-agent)
 ssh-add -D
 ssh-add "$RSA_PATH"
 
@@ -243,8 +244,7 @@ for_all_group clean.sh
 }
 
 setup(){
-#TODO:ripristinare
-#clone_dreamer
+clone_dreamer
 setup_nodes
 update_cfg_nodes
 }

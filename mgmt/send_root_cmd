@@ -2,7 +2,7 @@
  
 #Usage send_root_cmd <host> <ssh user> <ssh password> <su password> <su command>
  
-set timeout 10
+set timeout 5
  
 spawn ssh [lindex $argv 1]@[lindex $argv 0]
  

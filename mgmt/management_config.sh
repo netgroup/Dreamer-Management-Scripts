@@ -22,6 +22,7 @@ LOCAL_USER="root"
 MGT_SH_ADDR=https://www.dropbox.com/s/f5lse4stkxrwb6j/management.sh
 
 update_mgmt_sh(){
+	echo "Updating management.sh"
 	if ! [ -n "$MGT_SH_ADDR" ]; then
 		echo "MGT_SH_ADDR Not Setted"
 		exit 1
@@ -32,7 +33,7 @@ update_mgmt_sh(){
 }
 
 config_dsh(){
-
+echo "Config_dsh"
 echo "Please enter testbed username: "
 read OFELIA_USER
 echo "Please enter testbed $OFELIA_USER pass: "
@@ -94,14 +95,16 @@ for i in ${NODE_LIST[@]}; do
 		echo -e "\n$i not properly configured"
 		./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "sed -i \"s/\($TARGET_KEY * *\).*/\1$REPLACEMENT_VALUE/\" /etc/ssh/sshd_config"
 		./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "/etc/init.d/ssh restart"
-		./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "sed -i -e '/$USER@$HOSTNAME/d' /root/.ssh/authorized_keys"
-	 	./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "echo $(cat $RSA_PATH.pub) >> /root/.ssh/authorized_keys"
+		EXIST=$(./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "ls -l /root/.ssh/" | grep authorized_keys | wc -l)
+		if [ "$EXIST" -eq 1 ]; then
+			./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "sed -i -e '/$USER@$HOSTNAME/d' /root/.ssh/authorized_keys"
+		fi	 	
+		./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "echo $(cat $RSA_PATH.pub) >> /root/.ssh/authorized_keys"
 	else
 		echo -e "\n$i properly configured"	
 	fi
 done
 echo ""
-echo "Configure DSH..."
 
 #DSH configuration file
 TARGET_KEY="remoteshell"
@@ -151,17 +154,20 @@ LMERULES_SH_ADDR="https://www.dropbox.com/s/vp30krz8vamjoxn/lmerules.sh"
 
 clone_dreamer(){
 #git clone on all hosts in NODE_LIST
+echo "Clone_dreamer"
 dsh -M -g all -c rm -r -f $REPO_DIR
 dsh -M -g all -c git clone $REPO_URL
 }
 
 update_dreamer(){
 #git pull origin master on all hosts in NODE_LIST
+echo "Update_dreamer"
 dsh -M -g all -c "cd ./$REPO_DIR && git pull origin master"
 }
 
 
 for_all_group() {
+echo "For_all_group"
 # Executes $1 command on the deployed machines
 for i in ${DSH_GROUPS[@]}; do
         if [ "$i" = "OSHI" ]; then
@@ -175,14 +181,14 @@ for i in ${DSH_GROUPS[@]}; do
                 dsh -M -g $i -c "cd ./$REPO_DIR/othernodes/ && ./$1" 
 		else    
             	#Not Handled
-				echo "$i Not Handled"
-				exit 1 			 
+				echo "$i Not Handled...Skip"			 
         fi
 done
 
 }
 
 change_sh_addresses(){
+echo "Change_sh_addresses"
 # Change remote.cfg in accordance to $TESTBED_SH_ADDR and $LMERULES_SH_ADDR
 for i in ${DSH_GROUPS[@]}; do
         if [ "$i" = "OSHI" ]; then
@@ -216,8 +222,7 @@ for i in ${DSH_GROUPS[@]}; do
 				dsh -M -g $i -c "cd ./$REPO_DIR/othernodes/ && sed -i \"s@\($TARGET_KEY *= *\).*@\1$REPLACEMENT_VALUE@\" ./remote.cfg"
 		else    
             	#Not Handled
-				echo "$i Not Handled"
-				exit 1 			 
+				echo "$i Not Handled...Skip"
         fi
 done
 
@@ -225,35 +230,50 @@ done
 
 setup_nodes(){
 #setup.sh
+echo "Setup_nodes"
 for_all_group setup.sh
 }
 
 update_cfg_nodes(){
 #Update configuration files on all nodes
+echo "Update_cfg_nodes"
 for_all_group update_cfg.sh
 }
 
 config(){
 #Config all nodes 
+echo "Config"
 for_all_group config.sh
 }
 
 clean(){
 #Clean all nodes
+echo "Clean"
 for_all_group clean.sh
 }
 
 setup(){
+echo "Setup"
 clone_dreamer
 setup_nodes
+change_sh_addresses
 update_cfg_nodes
 }
 
 all(){
+echo "All"
 config_dsh
 setup
 config
 }
+
+echo -e "\n"
+echo "#############################################################"
+echo "##         DREAMER IP/SDN Hyibrid Management Tools         ##"
+echo "##                                                         ##"
+echo "##       The process can last many minutes. Please         ##"
+echo "##       and do not interrupt the process.                 ##"
+echo "#############################################################"
 
 USAGE="\n
 # 	Usage : ./managment_config.sh <option>\n

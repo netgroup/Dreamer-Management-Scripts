@@ -11,8 +11,12 @@ expect "yes/no" {
     expect "*?assword" { send "[lindex $argv 2]\r" }
     } "*?assword" { send "[lindex $argv 2]\r" }
 
-expect "$ " { send "su\r" }
-expect ": " { send "[lindex $argv 3]\r" } "# " { send "\r" }
+expect "$ " {
+        send "su\r"
+        expect "*?assword" { send "[lindex $argv 3]\r" }
+        }
+
 expect "# " { send "[lindex $argv 4]\r"}
+
 expect "#"
 # # interact

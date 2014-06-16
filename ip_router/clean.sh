@@ -112,20 +112,17 @@ for (( i=0; i<${#interfaces[@]}; i++ )); do
 	vconfig rem ${interfaces[$i]}.${vlan[$i]}
 done
 
-#TODO: test e poi togliere
-# # deleting lines related to the interfaces involved in /etc/network/interfaces
-# sed -i -e '/auto eth[^0]./,/\n/d' /etc/network/interfaces &&
 
 # Reset Hostname to default (oshi)
 echo -e "\n-Setting hostname"
 # setting hostname in /etc/hostname
-echo "oshi" > /etc/hostname &&
+echo "node" > /etc/hostname &&
 # removing second line from /etc/hosts
 sed -i '2d' /etc/hosts
 # adding new line to /etc/hosts with 127.0.0.1 oshi
-sed -i "1a\127.0.0.1\toshi" /etc/hosts &&
+sed -i "1a\127.0.0.1\tnode" /etc/hosts &&
 # setting up hostname
-hostname oshi &&
+hostname node &&
 
 # Deactivating unuseful interfaces (except management interface eth0) with ip link set ethX down
 unset interfaces
@@ -145,11 +142,6 @@ done
 echo -e "\n-Removing loopback address"
 ip addr del $(ip a | grep "scope global lo" | awk '{split($0,a," "); print a[2]}') dev lo &&
 
-#TODO: test e poi togliere
-# echo -e "\n-Cleaning up physical interfaces configuration"
-# # deleting lines related to the interfaces involved in /etc/network/interfaces
-# sed -i -e '/auto eth[^0]/,/\n/d' /etc/network/interfaces &&
-# sed -i -e '/^$/d' /etc/network/interfaces &&
 
 echo -e "\n-Restarting network services"
 /etc/init.d/networking restart &&

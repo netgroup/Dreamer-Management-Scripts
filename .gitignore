@@ -1,4 +1,4 @@
-**/testbed*
+**/testbed.sh
 oshi/lmerules.sh
 *.orig
 mgmt/management.sh

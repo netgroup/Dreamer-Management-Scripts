@@ -3,11 +3,11 @@
 # XXX Requirements
 # You have to install dsh, expect
 
-# Usage : ./managment_config.sh <option>
+# Usage : ./managment_config.sh -c <option>
 #	update_mgmt_sh : update the configuration file management.sh
 # 	config_dsh : enable root login, configure dsh machine.list and groups
-#	clone_dreamer : download code from $REPO_URL
-#   update_dreamer : update remote repo from $REPO_URL
+#	clone_dreamer : download code from $REPO_URL (Requests git on the remote VMs)
+#   update_dreamer : update remote repo from $REPO_URL (Requests git on the remote VMs)
 #	setup_nodes : install software required and update configuration files on all nodes
 #	setup : download code from $REPO_URL, install software required and update configuration files on all nodes
 #	update_cfg_nodes : Update configuration files on all nodes
@@ -276,11 +276,11 @@ echo "##       and do not interrupt the process.                 ##"
 echo "#############################################################"
 
 USAGE="\n
-# 	Usage : ./managment_config.sh <option>\n
+# 	Usage : ./managment_config.sh -c <option>\n
 #	update_mgmt_sh : update the configuration file management.sh\n
 # 	config_dsh : enable root login, configure dsh machine.list and groups\n
-#	clone_dreamer : download code from $REPO_URL\n
-#   update_dreamer : update remote repo from $REPO_URL\n
+#	clone_dreamer : download code from $REPO_URL (Requests git on the remote VMs)\n
+#   update_dreamer : update remote repo from $REPO_URL (Requests git on the remote VMs)\n
 #	setup_nodes : install software required and update configuration files on all nodes\n
 #	setup : download code from $REPO_URL, install software required and update configuration files on all nodes\n
 #	update_cfg_nodes : Update configuration files on all nodes\n

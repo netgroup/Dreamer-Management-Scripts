@@ -32,7 +32,13 @@ oshi () {
 
 	ovs-vsctl set-controller $BRIDGENAME $CONTROLLERS &&
 	ovs-vsctl set-fail-mode $BRIDGENAME secure &&
-	ovs-vsctl set controller $BRIDGENAME connection-mode=out-of-band &&
+
+	CTRLS=( $(ovs-vsctl find controller | grep _uuid |awk -F':' '{print $2}' | awk '{ gsub (" ", "", $0); print}')  )
+    for i in ${CTRLS[@]}; do
+            echo $i
+            ovs-vsctl set controller $i connection_mode=out-of-band 
+    done
+
 	ovs-vsctl set bridge $BRIDGENAME other-config:datapath-id=$DPID
 
 	if [ "$TUNNELING" = "VXLAN" ];then

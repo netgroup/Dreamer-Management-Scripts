@@ -1,0 +1,41 @@
+#!/bin/bash
+############################################################
+##            DREAMER IP/SDN Hyibrid node param           ##
+##                                                        ##
+##   Parameters to be set by the user for config process  ##
+##                                                        ##
+############################################################
+# HowTO
+#
+# PLEASE, DO NOT USE WHITE SPACES
+#
+# Configuration options, each line is a configuration option used by config script
+################################################################ ISTRUCTIONS END ###############################################################
+# general configuration - start
+TESTBED=GOFF
+TUNNELING=VXLAN
+# general configuration - end
+# 62.40.110.49 - start
+HOST=rou1
+ROUTERPWD=dreamer
+SLICEVLAN=700
+declare -a LOOPBACK=(172.16.0.1/32 1 1)
+declare -a INTERFACES=(eth1)
+declare -a eth1=(192.168.1.1 255.255.0.0)
+declare -a TAP=(tap1 tap2 tap3)
+declare -a tap1=(1 endip1)
+declare -a tap2=(2 endip2)
+declare -a tap3=(4 endip3)
+declare -a endip1=(192.168.1.2 eth1)
+declare -a endip2=(192.168.1.3 eth1)
+declare -a endip3=(192.168.1.4 eth1)
+declare -a VI=(vitap1 vitap2 vitap3)
+declare -a vitap1=(10.0.0.2/24 1 1)
+declare -a vitap2=(10.0.1.2/24 1 1)
+declare -a vitap3=(10.0.3.2/24 1 1)
+declare -a OSPFNET=(NET1 NET2 NET3 NET4)
+declare -a NET1=(172.16.0.1/32 0.0.0.0)
+declare -a NET2=(10.0.0.0/24 0.0.0.0)
+declare -a NET3=(10.0.1.0/24 0.0.0.0)
+declare -a NET4=(10.0.3.0/24 0.0.0.0)
+# 62.40.110.49 - end

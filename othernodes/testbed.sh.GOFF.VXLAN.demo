@@ -1,0 +1,30 @@
+#!/bin/bash
+############################################################
+##            DREAMER IP/SDN Hyibrid node param           ##
+##                                                        ##
+##   Parameters to be set by the user for config process  ##
+##                                                        ##
+############################################################
+# HowTO
+#
+# PLEASE, DO NOT USE WHITE SPACES
+#
+# Configuration options, each line is a configuration option used by config script
+################################################################ ISTRUCTIONS END ###############################################################
+# general configuration - start
+TESTBED=GOFF
+TUNNELING=VXLAN
+declare -a COEX=(COEXB 0)
+# general configuration - end
+# 62.40.110.51 - start
+HOST=ctrl1
+SLICEVLAN=700
+declare -a INTERFACES=(eth1)
+declare -a eth1=(192.168.1.4 255.255.0.0)
+declare -a TAP=(tap1)
+declare -a tap1=(4 ENDIP1)
+declare -a VI=(vitap1)
+declare -a vitap1=(10.0.3.2/24)
+declare -a STATICROUTE=(10.0.0.0 255.0.0.0 10.0.3.1 vitap1)
+declare -a ENDIP1=(192.168.1.3 eth1)
+# 62.40.110.51 - end

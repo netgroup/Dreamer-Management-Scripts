@@ -59,6 +59,7 @@ oshi () {
 	echo -e "\n-Adding internal virtual interfaces to OpenVSwitch"
 	for i in ${VI[@]}; do
 		ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=internal
+		ifconfig $i up	
 	done
 	
 	echo -e "\n-Creating static rules on OpenVSwitch"

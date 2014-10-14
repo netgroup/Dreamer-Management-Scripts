@@ -28,6 +28,7 @@ plain_ip_router_vxlan () {
 	echo -e "\n-Adding internal virtual interfaces to bridge $TUNL_BRIDGE"
 	for i in ${VI[@]}; do
 		ovs-vsctl add-port $TUNL_BRIDGE $i -- set Interface $i type=internal
+		ifconfig $i up	
 	done
 	declare -a ofporttap &&
 	declare -a ofportVI &&

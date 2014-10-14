@@ -31,7 +31,8 @@ plain_node_vxlan () {
             eval ip=\${${VI[$y]}[0]}
             echo $ip
             ip a a $ip  dev $i
-            y=$((y+1))
+			ifconfig $i up            
+			y=$((y+1))
         done
 
         declare -a port_tap &&

@@ -117,12 +117,14 @@ if [ $(cat /etc/modules | grep openvswitch | wc -l) -eq 0 ]
 fi
 # Create and initialize the database
 mkdir -p /usr/local/etc/openvswitch &&
+mv /usr/local/etc/openvswitch/conf.db /usr/local/etc/openvswitch/conf.db.old 2> /dev/null
 ovsdb-tool create /usr/local/etc/openvswitch/conf.db /opt/ovs/vswitchd/vswitch.ovsschema &&
 ovsdb-server --remote=punix:/usr/local/var/run/openvswitch/db.sock \
                      --remote=db:Open_vSwitch,Open_vSwitch,manager_options \
                      --private-key=db:Open_vSwitch,SSL,private_key \
                      --certificate=db:Open_vSwitch,SSL,certificate \
-                     --bootstrap-ca-cert=d
+                     --bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert \
+                     --pidfile --detach
 ovs-vsctl --no-wait init &&
 # Starting OVS
 echo -e "\n-Starting OpenVSwitch"

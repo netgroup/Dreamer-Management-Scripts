@@ -1,9 +1,9 @@
 #!/bin/bash
-# The script installs DREAMER node (Ctrl and Euh) packages on Linux Debian
+# The script installs IP Router node packages on Linux Debian
 
 echo -e "\n"
 echo "############################################################"
-echo "##            	  DREAMER node setup       			 ##"
+echo "##            DREAMER IP/SDN Hyibrid node setup           ##"
 echo "##                                                        ##"
 echo "## The installation process can last many minutes.        ##"
 echo "## Plase wait and do not interrupt the setup process.     ##"
@@ -15,7 +15,7 @@ if [ -f /etc/setup ]; then
 fi
 
 
-
+#TODO Sistemare per nuovo kernel in GOFF
 echo -e "\n"
 if [ $(uname -r) == "3.2.0-4-amd64" ]
 	then
@@ -89,12 +89,15 @@ fi
 
 echo -e "\n-Installing OpenVSwitch"
 # Creating folder for OVS under /opt/ovs
-mkdir -p /opt/ovs &&
+rm -f -r /opt/ovs 2> /dev/null
+mkdir -p /opt/ovs
+# Remove previous kernel module
+modprobe -r openvswitch 2> /dev/null
+mv /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko.orig 2> /dev/null
 # Downloading
-wget -P/opt/ovs http://openvswitch.org/releases/openvswitch-1.10.0.tar.gz &&
-# Extracting
-tar -xvzf /opt/ovs/openvswitch-1.10.0.tar.gz -C /opt/ovs &&
-cd  /opt/ovs/openvswitch-1.10.0/ &&
+cd /opt/ 
+git clone https://github.com/openvswitch/ovs.git
+cd  /opt/ovs/ 
 # Boot up and configuring sources
 ./boot.sh &&
 ./configure --with-linux=/lib/modules/`uname -r`/build &&
@@ -104,7 +107,7 @@ make install &&
 # OVS module installation
 make modules_install &&
 mkdir -p /lib/modules/`uname -r`/kernel/openvswitch
-cp /opt/ovs/openvswitch-1.10.0/datapath/linux/openvswitch.ko /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko
+cp /opt/ovs/datapath/linux/openvswitch.ko /lib/modules/`uname -r`/kernel/openvswitch/openvswitch.ko
 depmod -a &&
 # Making module loading permanent
 modprobe openvswitch &&
@@ -114,13 +117,14 @@ if [ $(cat /etc/modules | grep openvswitch | wc -l) -eq 0 ]
 fi
 # Create and initialize the database
 mkdir -p /usr/local/etc/openvswitch &&
-ovsdb-tool create /usr/local/etc/openvswitch/conf.db /opt/ovs/openvswitch-1.10.0/vswitchd/vswitch.ovsschema &&
+mv /usr/local/etc/openvswitch/conf.db /usr/local/etc/openvswitch/conf.db.old 2> /dev/null
+ovsdb-tool create /usr/local/etc/openvswitch/conf.db /opt/ovs/vswitchd/vswitch.ovsschema &&
 ovsdb-server --remote=punix:/usr/local/var/run/openvswitch/db.sock \
-                     --remote=db:Open_vSwitch,manager_options \
-                     --private-key=db:SSL,private_key \
-                     --certificate=db:SSL,certificate \
-                     --bootstrap-ca-cert=db:SSL,ca_cert \
-                     --pidfile --detach &&
+                     --remote=db:Open_vSwitch,Open_vSwitch,manager_options \
+                     --private-key=db:Open_vSwitch,SSL,private_key \
+                     --certificate=db:Open_vSwitch,SSL,certificate \
+                     --bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert \
+                     --pidfile --detach
 ovs-vsctl --no-wait init &&
 # Starting OVS
 echo -e "\n-Starting OpenVSwitch"
@@ -177,10 +181,10 @@ echo "
 Starting openvswitch..."
 /usr/local/sbin/ovsdb-server /usr/local/etc/openvswitch/conf.db \
 --remote=punix:/usr/local/var/run/openvswitch/db.sock \
---remote=db:Open_vSwitch,manager_options \
---private-key=db:SSL,private_key \
---certificate=db:SSL,certificate \
---bootstrap-ca-cert=db:SSL,ca_cert \
+--remote=db:Open_vSwitch,Open_vSwitch,manager_options \
+--private-key=db:Open_vSwitch,SSL,private_key \
+--certificate=db:Open_vSwitch,SSL,certificate \
+--bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert \
 --pidfile --detach\n
 
 /usr/local/bin/ovs-vsctl --no-wait init
@@ -218,7 +222,7 @@ update-rc.d openvswitchd defaults &&
 
 touch /etc/setup
 
-echo -e "\n\nDREAMER node (Ctrl and Euh) setup ended succesfully. Enjoy!\n"
+echo -e "\n\nDREAMER IP router node setup ended succesfully. Enjoy!\n"
 
 EXIT_SUCCESS=0
 exit $EXIT_SUCCESS

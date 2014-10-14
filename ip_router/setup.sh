@@ -3,7 +3,7 @@
 
 echo -e "\n"
 echo "############################################################"
-echo "##            DREAMER IP/SDN Hyibrid node setup           ##"
+echo "##              DREAMER IP Router node setup              ##"
 echo "##                                                        ##"
 echo "## The installation process can last many minutes.        ##"
 echo "## Plase wait and do not interrupt the setup process.     ##"
@@ -116,8 +116,10 @@ if [ $(cat /etc/modules | grep openvswitch | wc -l) -eq 0 ]
 		echo "openvswitch" >> /etc/modules
 fi
 # Create and initialize the database
+rm -f -r /usr/local/etc/openvswitch/ 2> /dev/null
 mkdir -p /usr/local/etc/openvswitch &&
-mv /usr/local/etc/openvswitch/conf.db /usr/local/etc/openvswitch/conf.db.old 2> /dev/null
+rm -f -r /usr/local/var/run/openvswitch/ 2> /dev/null
+mkdir -p /usr/local/var/run/openvswitch &&
 ovsdb-tool create /usr/local/etc/openvswitch/conf.db /opt/ovs/vswitchd/vswitch.ovsschema &&
 ovsdb-server --remote=punix:/usr/local/var/run/openvswitch/db.sock \
                      --remote=db:Open_vSwitch,Open_vSwitch,manager_options \
@@ -222,7 +224,7 @@ update-rc.d openvswitchd defaults &&
 
 touch /etc/setup
 
-echo -e "\n\nDREAMER IP router node setup ended succesfully. Enjoy!\n"
+echo -e "\n\nDREAMER IP Router node setup ended succesfully. Enjoy!\n"
 
 EXIT_SUCCESS=0
 exit $EXIT_SUCCESS

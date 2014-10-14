@@ -95,6 +95,7 @@ for i in ${NODE_LIST[@]}; do
 		echo -e "\n$i not properly configured"
 		./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "sed -i \"s/\($TARGET_KEY * *\).*/\1$REPLACEMENT_VALUE/\" /etc/ssh/sshd_config"
 		./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "/etc/init.d/ssh restart"
+		sleep 10
 		EXIST=$(./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "ls -l /root/.ssh/" | grep authorized_keys | wc -l)
 		if [ "$EXIST" -eq 1 ]; then
 			./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "sed -i -e '/$USER@$HOSTNAME/d' /root/.ssh/authorized_keys"
@@ -165,7 +166,6 @@ echo "Update_dreamer"
 dsh -M -g all -c "cd ./$REPO_DIR && git pull origin master"
 }
 
-
 for_all_group() {
 echo "For_all_group"
 # Executes $1 command on the deployed machines
@@ -176,7 +176,7 @@ for i in ${DSH_GROUPS[@]}; do
         elif [ "$i" = "ROUTER" ];then
                 echo $i
 				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && ./$1"  
-        elif [ "$i" = "EUH" ] || [ "$i" = "CTRL" ];then
+        elif [ "$i" = "CER" ] || [ "$i" = "CTRL" ];then
 				echo $i
                 dsh -M -g $i -c "cd ./$REPO_DIR/othernodes/ && ./$1" 
 		else    
@@ -211,10 +211,10 @@ for i in ${DSH_GROUPS[@]}; do
 				TARGET_KEY="DREAMERCONFIGSERVER"
 				REPLACEMENT_VALUE="$TESTBED_SH_ADDR"
 				dsh -M -g $i -c "cd ./$REPO_DIR/ip_router/ && sed -i \"s@\($TARGET_KEY *= *\).*@\1$REPLACEMENT_VALUE@\" ./remote.cfg"
-        elif [ "$i" = "EUH" ] || [ "$i" = "CTRL" ];then
+        elif [ "$i" = "CER" ] || [ "$i" = "CTRL" ];then
 				echo $i
 				if ! [ -n "$TESTBED_SH_ADDR" ]; then
-					echo "Addresses Not Setted For EUH and CTRL"
+					echo "Addresses Not Setted For CER and CTRL"
 					exit 1
 				fi
 				TARGET_KEY="DREAMERCONFIGSERVER"
@@ -227,6 +227,14 @@ for i in ${DSH_GROUPS[@]}; do
 done
 
 }
+
+force_setup(){
+echo "Force_setup"
+dsh -M -g all -c "rm /etc/setup 2> /dev/null"
+dsh -M -g all -c "/etc/init.d/openvswitchd stop"
+setup_nodes
+}
+
 
 setup_nodes(){
 #setup.sh

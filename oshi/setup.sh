@@ -79,6 +79,14 @@ apt-get install -y vlan &&
 echo -e "\n-Installing Quagga router services"
 apt-get install -y quagga
 
+echo -e "\n-Installing iproute"
+apt-get install -y iproute
+
+echo -e "\n-Installing sudo"
+apt-get install -y sudo
+
+
+
 echo -e "-VLAN module setup"
 modprobe 8021q &&
 # Make 801q module loading permanent
@@ -221,6 +229,11 @@ esac\n
 exit 0' > /etc/init.d/openvswitchd &&
 chmod +x /etc/init.d/openvswitchd &&
 update-rc.d openvswitchd defaults &&
+
+cd /root/
+rm -f -r mininet/ 2> /dev/null
+git clone git://github.com/mininet/mininet
+mininet/util/install.sh -ent
 
 touch /etc/setup
 

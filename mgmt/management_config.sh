@@ -151,6 +151,7 @@ REPO_URL=https://github.com/netgroup/Dreamer-Setup-Scripts
 
 TESTBED_SH_ADDR="https://www.dropbox.com/s/smsyctn1qj72kpk/testbed.sh"
 LMERULES_SH_ADDR="https://www.dropbox.com/s/vp30krz8vamjoxn/lmerules.sh"
+VSF_CFG="https://www.dropbox.com/s/9krws369fk8osxm/vsf.cfg"
 
 
 clone_dreamer(){
@@ -201,7 +202,9 @@ for i in ${DSH_GROUPS[@]}; do
 				REPLACEMENT_VALUE="$TESTBED_SH_ADDR"
 				TARGET_KEY2="DREAMERCONFIGSERVER2"
 				REPLACEMENT_VALUE2="$LMERULES_SH_ADDR"
-				dsh -M -g $i -c "cd ./$REPO_DIR/oshi/ && sed -i \"s@\($TARGET_KEY *= *\).*@\1$REPLACEMENT_VALUE@\" ./remote.cfg  && sed -i \"s@\($TARGET_KEY2 *= *\).*@\1$REPLACEMENT_VALUE2@\" ./remote.cfg"
+				TARGET_KEY3="DREAMERCONFIGSERVER3"
+				REPLACEMENT_VALUE3="$VSF_CFG"
+				dsh -M -g $i -c "cd ./$REPO_DIR/oshi/ && sed -i \"s@\($TARGET_KEY *= *\).*@\1$REPLACEMENT_VALUE@\" ./remote.cfg  && sed -i \"s@\($TARGET_KEY2 *= *\).*@\1$REPLACEMENT_VALUE2@\" ./remote.cfg && sed -i \"s@\($TARGET_KEY3 *= *\).*@\1$REPLACEMENT_VALUE3@\" ./remote.cfg"
         elif [ "$i" = "ROUTER" ];then
                 echo $i
 				if ! [ -n "$TESTBED_SH_ADDR" ]; then

@@ -89,6 +89,7 @@ ssh-add "$RSA_PATH"
 fi
 
 for i in ${NODE_LIST[@]}; do
+	./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "mkdir -p /root/.ssh/"
 	CONFIGURED=$(./send_root_cmd $i $OFELIA_USER $OFELIA_PASS $ROOT_PASS "cat /root/.ssh/authorized_keys" | grep $USER@$HOSTNAME | wc -l)
 	if [ "$CONFIGURED" -eq 0 ] || [ "$GENERATED" -eq 1 ]; then
 		# XXX We can have problem if the machine is configured with rsa.pub and it doesn't allow root login

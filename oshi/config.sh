@@ -49,10 +49,22 @@ oshi () {
 			eval remoteaddr=\${!$i[1]}
 			ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport
 		done
+
+		echo -e "\n-Adding pw interfaces to bridge $BRIDGENAME"
+		for i in ${PWTAP[@]}; do
+    		eval remoteport=\${${i}[0]}  
+			eval remoteaddr=\${!$i[1]}
+			ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=vxlan options:remote_ip=$remoteaddr options:key=$remoteport
+		done
 	else
 		echo -e "\n-Adding interfaces to bridge $BRIDGENAME"
 		for i in ${TAP[@]}; do
 			ovs-vsctl add-port $BRIDGENAME $i
+		done
+
+		echo -e "\n-Adding pw interfaces to bridge $BRIDGENAME"
+		for i in ${PWTAP[@]}; do
+    		ovs-vsctl add-port $BRIDGENAME $i
 		done
 	fi
 
@@ -83,6 +95,17 @@ setup_interfaces () {
 	# set static routes
     declare -a ENDIPS
     for i in ${TAP[@]}; do
+    		if [ "$TUNNELING" = "OpenVPN" ]; then
+    			eval ELEMENT=\${${i}[2]}
+    		else
+            	eval ELEMENT=\${${i}[1]} 
+            fi
+            if [ $(echo ${ENDIPS[@]} | grep -o $ELEMENT | wc -w) -eq 0 ];then
+                    ENDIPS[${#ENDIPS[@]}]=$ELEMENT
+            fi
+    done
+
+	for i in ${PWTAP[@]}; do
     		if [ "$TUNNELING" = "OpenVPN" ]; then
     			eval ELEMENT=\${${i}[2]}
     		else
@@ -152,7 +175,24 @@ script-security 3 system
 up \"bash /etc/openvpn/${i}.sh\"" > /etc/openvpn/$i.conf
 done
 
+for i in ${PWTAP[@]}; do
+	eval localport=\${${i}[0]}
+    eval remoteport=\${${i}[1]}
+	eval remoteaddr=\${!$i[2]}
+	echo "dev ${i}
+mode p2p
+port $localport
+remote $remoteaddr $remoteport
+script-security 3 system
+up \"bash /etc/openvpn/${i}.sh\"" > /etc/openvpn/$i.conf
+done
+
 for i in ${TAP[@]}; do
+	echo "#!/bin/bash
+ip link set ${i} up" > /etc/openvpn/$i.sh
+done
+
+for i in ${PWTAP[@]}; do
 	echo "#!/bin/bash
 ip link set ${i} up" > /etc/openvpn/$i.sh
 done

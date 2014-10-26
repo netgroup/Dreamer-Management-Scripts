@@ -1,7 +1,7 @@
 #!/bin/bash
 rm testbed.sh 2> /dev/null
 rm lmerules.sh 2> /dev/null
-rm vsf.cfg 2> /dev/null
+rm vs/vsf.cfg 2> /dev/null
 
 if ! [ -f remote.cfg ]; then
 	echo -e "remote.cfg not found...exit"
@@ -34,5 +34,5 @@ sed "${START_END[0]},${START_END[1]}!d" lmerules.sh >> rules.sh
 
 mv rules.sh lmerules.sh
 
-wget $DREAMERCONFIGSERVER3
+wget $DREAMERCONFIGSERVER3 -O vs/vsf.cfg
 

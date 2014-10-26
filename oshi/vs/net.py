@@ -101,9 +101,9 @@ class MininetVS(Mininet):
 			rootnode.start(self.tableIP, self.node_to_pw_data[rootnode.name])		
 		info( '\n' )
 
-		if 'DISPLAY' not in os.environ:
-			error( "Error starting terms: Cannot connect to display\n" )
-			return
-		info( "*** Running ctrls terms on %s\n" % os.environ[ 'DISPLAY' ] )
-		cleanUpScreens()
-		self.terms += makeTerms( self.vsfs, 'vsf' )
+		#if 'DISPLAY' not in os.environ:
+		#	error( "Error starting terms: Cannot connect to display\n" )
+		#	return
+		#info( "*** Running ctrls terms on %s\n" % os.environ[ 'DISPLAY' ] )
+		#cleanUpScreens()
+		#self.terms += makeTerms( self.vsfs, 'vsf' )

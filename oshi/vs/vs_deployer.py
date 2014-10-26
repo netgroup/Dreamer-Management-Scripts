@@ -63,7 +63,6 @@ if __name__ == '__main__':
 	read_conf_file()
 	root = Node( 'root', inNamespace=False )	
 	mgt_ip = (root.cmd("ip -4 addr show dev eth0 | grep -m 1 \"inet \" | awk '{print $2}' | cut -d \"/\" -f 1"))[:-1]
-	mgt_ip = "62.40.110.8"	
 	vsfs = []
 	for vsf in deployer_cfg["vsfs"]:
 		if mgt_ip == vsf['vm']:

@@ -62,10 +62,12 @@ if __name__ == '__main__':
 	lg.setLogLevel('info')
 	read_conf_file()
 	root = Node( 'root', inNamespace=False )	
-	mgt_ip = (root.cmd("ip -4 addr show dev eth0 | grep -m 1 \"inet \" | awk '{print $2}' | cut -d \"/\" -f 1"))[:-1]
+	mgt_ip = (root.cmd("ip -4 addr show dev eth0 | grep -m 1 \"inet \" | awk '{print $2}' | cut -d \"/\" -f 1")[:-1])
+	mgt_ip = mgt_ip.strip(' \t\n\r')
 	vsfs = []
 	for vsf in deployer_cfg["vsfs"]:
-		if mgt_ip == vsf['vm']:
+		vm = vsf['vm'].strip(' \t\n\r')
+		if mgt_ip == vm:
 			vsfs = vsf['vsfs']
 
 	if len(vsfs) > 0:
@@ -81,6 +83,8 @@ if __name__ == '__main__':
 				net.addPW(vsfname, pw)
 			i = i + 1
 		net.start()
+	else:
+		info("*** No VSF to deploy\n")
 		
 		
 

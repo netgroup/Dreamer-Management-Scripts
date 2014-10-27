@@ -76,6 +76,8 @@ oshi () {
 	
 	echo -e "\n-Creating static rules on OpenVSwitch"
 	python lme.py
+	echo -e "\n-Deploying VSF"
+	python vs/vsf_deployer.py
 
 }
 
@@ -325,7 +327,14 @@ ip link set ${i}.${COEX[1]} up 2> /dev/null
 
 done
 
+elif [ "${COEX[0]}" = "COEXH" ];then
+
+echo -e "\nCOEXH...Switching to OpenFlow13"
+ovs-vsctl set bridge $BRIDGENAME protocols=OpenFlow13
+
 fi
+
+
 
 echo -e "\n\nDREAMER IP/SDN hybrid node configuration ended succesfully. Enjoy!\n"
 

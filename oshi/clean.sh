@@ -146,6 +146,9 @@ ip addr del $(ip a | grep "scope global lo" | awk '{split($0,a," "); print a[2]}
 echo -e "\n-Restarting network services"
 /etc/init.d/networking restart &&
 
+echo -e "\n-Removing VSF/VS deployed"
+python vs/clean.py
+
 echo -e "\n\nDREAMER configuration cleaning ended succesfully. Enjoy!\n"
 
 EXIT_SUCCESS=0

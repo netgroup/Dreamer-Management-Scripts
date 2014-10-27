@@ -78,7 +78,7 @@ oshi () {
 	python lme.py
 	echo -e "\n-Deploying VSF"
 	cd vs/
-	python vs/vsf_deployer.py
+	python vsf_deployer.py
 	cd ..
 
 }

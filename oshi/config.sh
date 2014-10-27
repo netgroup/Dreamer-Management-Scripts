@@ -77,7 +77,9 @@ oshi () {
 	echo -e "\n-Creating static rules on OpenVSwitch"
 	python lme.py
 	echo -e "\n-Deploying VSF"
+	cd vs/
 	python vs/vsf_deployer.py
+	cd ..
 
 }
 

@@ -36,7 +36,7 @@ import json
 import sys
 
 from mininet.node import Node
-from mininet.log import lg, info
+from mininet.log import lg, info, error
 
 from net import MininetVS
 

@@ -147,7 +147,9 @@ echo -e "\n-Restarting network services"
 /etc/init.d/networking restart &&
 
 echo -e "\n-Removing VSF/VS deployed"
-python vs/clean.py
+cd vs/
+python clean.py
+cd ..
 
 echo -e "\n\nDREAMER configuration cleaning ended succesfully. Enjoy!\n"
 

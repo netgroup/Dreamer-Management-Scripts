@@ -73,6 +73,12 @@ oshi () {
 		ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=internal
 		ifconfig $i up	
 	done
+
+	echo -e "\n-Adding internal virtual tap interfaces to OpenVSwitch"
+	for i in ${VITAP[@]}; do
+		ovs-vsctl add-port $BRIDGENAME $i -- set Interface $i type=internal
+		ifconfig $i up	
+	done
 	
 	echo -e "\n-Creating static rules on OpenVSwitch"
 	python lme.py

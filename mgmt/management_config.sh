@@ -15,6 +15,8 @@
 #	clean : clean all nodes
 #	all : complete setup and config
 #	change_sh_addresses : update remote.cfg on the machines
+#	force_setup : setup for the machine already setup
+
 
 LOCAL_USER="root"
 
@@ -299,7 +301,8 @@ USAGE="\n
 #	config : configure all nodes\n
 #	clean : clean all nodes\n
 #	all : complete setup and config\n
-#	change_sh_addresses : update remote.cfg on the machines\n"
+#	change_sh_addresses : update remote.cfg on the machines\n
+#	force_setup : setup for the machine already setup\n"
 
 while getopts ":c: " opt; do
     case $opt in

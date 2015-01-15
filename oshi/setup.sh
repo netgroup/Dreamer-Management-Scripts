@@ -233,6 +233,9 @@ update-rc.d openvswitchd defaults &&
 cd /root/
 rm -f -r mininet/ 2> /dev/null
 git clone git://github.com/mininet/mininet
+cd mininet/
+git reset --hard aae0affae46a63ef5e54d86351c96417c3888112
+cd ..
 mininet/util/install.sh -ent
 
 touch /etc/setup

@@ -1,11 +1,11 @@
-![Alt text](repo_data/dreamer-logo.png "Optional title")
+![OSHI and DREAMER logos](http://netgroup.uniroma2.it/twiki/pub/Oshi/WebHome/dreamer-oshi-logo-github.png "http://netgroup.uniroma2.it/OSHI")
 
-Dreamer-Setup-Scripts
+Dreamer-Management-Scripts
 =====================
 
-Setup Scripts For Dreamer Project (GÉANT Open Call)
+Management Scripts For Dreamer Project (GÉANT Open Call)
 
-Scripts to install and configure a DREAMER testbed both on GOFF and OFELIA facilities.
+Scripts to install and configure a DREAMER testbed both on GOFF and OFELIA facilities. It includes setup scripts, config scripts and remote control scripts for different types of nodes to be managed.
 
 License
 =======
@@ -20,7 +20,7 @@ Tips
 
 See [OSHI (Open Source Hybrid IP/SDN) - Experiments over the OFELIA SDN TESTBED](http://netgroup.uniroma2.it/twiki/pub/Oshi/WebHome/ofelia-experiment.pdf)
 
-Dreamer Setup Scripts Dependencies
+Dreamer Management Scripts Dependencies
 =============================
 
 1) expect (apt)
